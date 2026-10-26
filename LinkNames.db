@@ -1,0 +1,52 @@
+﻿DATA_BLOCK "LinkNames"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 0.1
+NON_RETAIN
+"TcpLinkNames"
+
+BEGIN
+   // Navnene, som startverdier. Denne filen er signallisten: hold den ved
+   // siden av koden som fyller txDigital / txAnalog og leser rx, og endre
+   // de to sammen.
+   //
+   // Fylt ut med kjøreverk-tilordningen fra TCP_LINK.md avsnitt 9 som et
+   // eksempel. Plasser som ikke står her, forblir tomme og vises med
+   // indeksen sin.
+   //
+   // Filen er lagret som UTF-8 med BOM, så TIA leser æ, ø og å riktig, både
+   // i kommentarene og i navnene. Hvis et navn likevel kommer fram med rare
+   // tegn etter import, er filen lagret i et annet format på veien: lagre
+   // den som UTF-8 med BOM og importer på nytt.
+
+   // ---- txDigital.words ----
+   txWords[0] := 'Feilkode';
+   txWords[1] := 'Varselkode';
+   txWords[2] := 'Statusord';
+
+   // ---- txDigital.times ----
+   txTimes[0] := 'Sist kjørt';
+
+   // ---- txAnalog.reals ----
+   txReals[0] := 'Hastighet [rpm]';
+   txReals[1] := 'Moment [Nm]';
+   txReals[2] := 'Strøm [A]';
+
+   // ---- txAnalog.dints ----
+   txDints[0] := 'Distanse lastet [m]';
+   txDints[1] := 'Distanse tom [m]';
+   txDints[2] := 'Kjøretid lastet [s]';
+   txDints[3] := 'Kjøretid tom [s]';
+
+   // ---- rx.bits / rx.pulse ----
+   rxBits[0] := 'Start';
+   rxBits[1] := 'Stopp';
+   rxBits[2] := 'Kvitter feil';
+   rxBits[3] := 'Frigi drift';
+   rxBits[4] := 'Manuell modus';
+   rxBits[5] := 'Jogg forover';
+   rxBits[6] := 'Jogg bakover';
+
+   // ---- rx.ints ----
+   rxInts[0] := 'Hastighetssettpunkt';
+   rxInts[1] := 'Posisjonsmål';
+END_DATA_BLOCK

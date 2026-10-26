@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 850" width="1200" height="850" role="img" aria-label="Inne i PLS-en: logikken din leser og skriver bare LinkDB. TcpLink kjøres hver syklus i sju steg: størrelser fra UDT-ene, forbindelse, mottak til rx, endringsdeteksjon mot dødbånd, historikk til den retentive LinkHistory, beslutning og sending. Navnene sendes rett fra LinkNames som referanse." font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
+  <title>TcpLink – inne i PLS-en</title>
+  <desc>Logikken i OB1 skriver tx-dataene, dødbåndene og histMask og leser rx i LinkDB. TcpLink leser alle størrelser fra UDT-typene via TcpLinkCount, tar imot kommandoer til rx, sammenligner tx med forrige sendte melding og dødbåndene, logger endringer som histMask velger ut i den retentive DB-en LinkHistory, bestemmer hva som skal sendes, og sender datameldingen, navne-DB-en LinkNames eller historikken med TSEND.</desc>
+  <defs>
+    <marker id="a-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3e4c59"/></marker>
+    <marker id="a-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2b8a3e"/></marker>
+    <marker id="a-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/></marker>
+    <marker id="a-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7048e8"/></marker>
+  </defs>
+
+  <rect width="1200" height="850" fill="#ffffff"/>
+
+  <text x="32" y="44" font-size="22" font-weight="700" fill="#1f2933">Inne i PLS-en – én syklus gjennom TcpLink</text>
+  <text x="32" y="70" font-size="13" fill="#52606d">Logikken din leser og skriver bare LinkDB. TcpLink leser alle størrelser fra UDT-ene og fører historikken i en retentiv DB.</text>
+
+  <!-- ================= venstre: logikk og datablokker ================= -->
+  <rect x="32" y="100" width="320" height="56" rx="8" fill="#ffffff" stroke="#7b8794"/>
+  <text x="48" y="124" font-size="14" font-weight="700" fill="#1f2933">Din logikk (OB1)</text>
+  <text x="48" y="144" font-size="12" fill="#52606d">skriver tx, dødbånd og histMask · leser rx</text>
+
+  <line x1="72" y1="158" x2="72" y2="268" stroke="#3e4c59" stroke-width="1.5" marker-start="url(#a-ink)" marker-end="url(#a-ink)"/>
+  <text x="84" y="236" font-size="11" fill="#52606d">skriver / leser</text>
+
+  <rect x="32" y="270" width="320" height="412" rx="10" fill="#eef4fb" stroke="#9db4cf"/>
+  <text x="48" y="298" font-size="14" font-weight="700" fill="#1f2933">LinkDB</text>
+  <text x="104" y="298" font-size="12" fill="#52606d">(DB, ikke-optimert)</text>
+
+  <g>
+    <rect x="48" y="325" width="288" height="56" rx="6" fill="#ffffff" stroke="#b8c4d0"/>
+    <rect x="48" y="325" width="4" height="56" fill="#c2410c"/>
+    <text x="62" y="347" font-size="12" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">rx : TcpLinkRx</text>
+    <text x="62" y="366" font-size="11" fill="#52606d">bits · words · ints · dints · reals · pulse</text>
+
+    <rect x="48" y="397" width="288" height="56" rx="6" fill="#ffffff" stroke="#b8c4d0"/>
+    <rect x="48" y="397" width="4" height="56" fill="#1c64c8"/>
+    <text x="62" y="419" font-size="12" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">txDigital : TcpLinkTxDigital</text>
+    <text x="62" y="438" font-size="11" fill="#52606d">bits[32] · words[8] · times[4]</text>
+
+    <rect x="48" y="469" width="288" height="56" rx="6" fill="#ffffff" stroke="#b8c4d0"/>
+    <rect x="48" y="469" width="4" height="56" fill="#1c64c8"/>
+    <text x="62" y="491" font-size="12" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">txAnalog : TcpLinkTxAnalog</text>
+    <text x="62" y="510" font-size="11" fill="#52606d">ints[16] · dints[8] · reals[8]</text>
+
+    <rect x="48" y="541" width="288" height="56" rx="6" fill="#ffffff" stroke="#b8c4d0"/>
+    <rect x="48" y="541" width="4" height="56" fill="#9aa5b1"/>
+    <text x="62" y="563" font-size="12" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">deadband : TcpLinkTxAnalog</text>
+    <text x="62" y="582" font-size="11" fill="#52606d">samme form som txAnalog → samme indeks</text>
+
+    <rect x="48" y="613" width="288" height="56" rx="6" fill="#ffffff" stroke="#b8c4d0"/>
+    <rect x="48" y="613" width="4" height="56" fill="#7048e8"/>
+    <text x="62" y="635" font-size="12" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">histMask : TcpLinkTxDigital</text>
+    <text x="62" y="654" font-size="11" fill="#52606d">samme form som txDigital → hva som logges</text>
+  </g>
+
+  <rect x="32" y="706" width="320" height="64" rx="10" fill="#e9f5ec" stroke="#9fcca9"/>
+  <text x="48" y="732" font-size="14" font-weight="700" fill="#1f2933">LinkNames</text>
+  <text x="128" y="732" font-size="12" fill="#52606d">(DB, ikke-optimert)</text>
+  <text x="48" y="754" font-size="11" fill="#52606d">TcpLinkNames: hdr + én String-array per dataarray</text>
+
+  <!-- ================= midten: TcpLink ================= -->
+  <rect x="440" y="100" width="464" height="608" rx="12" fill="#ffffff" stroke="#3e4c59" stroke-width="1.5"/>
+  <text x="460" y="128" font-size="15" font-weight="700" fill="#1f2933">TcpLink (FB)</text>
+  <text x="460" y="148" font-size="12" fill="#52606d">kjøres hver syklus, ovenfra og ned</text>
+
+  <g>
+    <rect x="460" y="180" width="424" height="58" rx="6" fill="#f5f7fa" stroke="#cbd2d9"/>
+    <text x="476" y="204" font-size="13" font-weight="700" fill="#1f2933">0 · Størrelser</text>
+    <text x="476" y="224" font-size="12" fill="#52606d">TcpLinkCount teller arrayene → txLen, rxLen, layoutbyte</text>
+
+    <rect x="460" y="252" width="424" height="58" rx="6" fill="#f5f7fa" stroke="#cbd2d9"/>
+    <text x="476" y="276" font-size="13" font-weight="700" fill="#1f2933">1–2, 4–5 · Forbindelse</text>
+    <text x="476" y="296" font-size="12" fill="#52606d">TCON lytter · tilstandsmaskin · TDISCON rydder opp</text>
+
+    <rect x="460" y="324" width="424" height="58" rx="6" fill="#f5f7fa" stroke="#cbd2d9"/>
+    <text x="476" y="348" font-size="13" font-weight="700" fill="#1f2933">3 · Mottak</text>
+    <text x="476" y="368" font-size="12" fill="#52606d">TRCV med fast LEN → sjekk header → flanker → rx</text>
+
+    <rect x="460" y="396" width="424" height="58" rx="6" fill="#f5f7fa" stroke="#cbd2d9"/>
+    <text x="476" y="420" font-size="13" font-weight="700" fill="#1f2933">7 · Hva er endret?</text>
+    <text x="476" y="440" font-size="12" fill="#52606d">mot forrige sendte melding · dødbånd · tider til sekundet</text>
+
+    <rect x="460" y="468" width="424" height="58" rx="6" fill="#f3f0fe" stroke="#b9a8f5"/>
+    <text x="476" y="492" font-size="13" font-weight="700" fill="#7048e8">7b · Historikk</text>
+    <text x="476" y="512" font-size="12" fill="#52606d">mot forrige syklus · det histMask velger ut → én post per endring</text>
+
+    <rect x="460" y="540" width="424" height="58" rx="6" fill="#f5f7fa" stroke="#cbd2d9"/>
+    <text x="476" y="564" font-size="13" font-weight="700" fill="#1f2933">8 · Bestem</text>
+    <text x="476" y="584" font-size="12" fill="#52606d">navn først · så data ved endring eller heartbeat · så historikk</text>
+
+    <rect x="460" y="612" width="424" height="58" rx="6" fill="#f5f7fa" stroke="#cbd2d9"/>
+    <text x="476" y="636" font-size="13" font-weight="700" fill="#1f2933">9–10 · Bygg og send</text>
+    <text x="476" y="656" font-size="12" fill="#52606d">én TSEND: datameldingen, navne-DB-en eller 16 poster historikk</text>
+  </g>
+  <text x="460" y="694" font-size="11" fill="#7b8794">11–12 · låser feilkoder og teller sendinger, mottak og feil</text>
+
+  <!-- størrelser fra typene -->
+  <path d="M192,270 V209 H458" fill="none" stroke="#3e4c59" stroke-width="1.5" marker-end="url(#a-ink)"/>
+  <text x="325" y="201" font-size="11" fill="#52606d" text-anchor="middle">typene → antall elementer</text>
+
+  <!-- rx tilbake -->
+  <line x1="458" y1="353" x2="338" y2="353" stroke="#c2410c" stroke-width="1.5" marker-end="url(#a-orange)"/>
+  <text x="398" y="345" font-size="11" fill="#c2410c" text-anchor="middle">rx</text>
+
+  <!-- tx + dødbånd inn -->
+  <g stroke="#3e4c59" stroke-width="1.5" fill="none">
+    <line x1="336" y1="425" x2="356" y2="425"/>
+    <line x1="336" y1="497" x2="356" y2="497"/>
+    <line x1="336" y1="569" x2="356" y2="569"/>
+    <line x1="356" y1="425" x2="356" y2="569"/>
+  </g>
+  <line x1="356" y1="425" x2="458" y2="425" stroke="#3e4c59" stroke-width="1.5" marker-end="url(#a-ink)"/>
+  <text x="404" y="417" font-size="11" fill="#52606d" text-anchor="middle">tx + dødbånd</text>
+
+  <!-- histMask inn til 7b -->
+  <path d="M336,641 H400 V509 H458" fill="none" stroke="#7048e8" stroke-width="1.5" marker-end="url(#a-purple)"/>
+  <text x="406" y="600" font-size="11" fill="#7048e8">histMask</text>
+
+  <!-- navn rett fra DB-en -->
+  <path d="M352,738 H570 V672" fill="none" stroke="#2b8a3e" stroke-width="1.5" marker-end="url(#a-green)"/>
+  <text x="470" y="730" font-size="11" fill="#2b8a3e" text-anchor="middle">names · referanse, ingen kopi</text>
+
+  <!-- historikk i retentiv DB -->
+  <line x1="770" y1="710" x2="770" y2="758" stroke="#7048e8" stroke-width="1.5" marker-start="url(#a-purple)" marker-end="url(#a-purple)"/>
+  <text x="782" y="738" font-size="11" fill="#7048e8">7b skriver · 9 leser</text>
+  <rect x="580" y="760" width="324" height="64" rx="10" fill="#f3f0fe" stroke="#7048e8" stroke-width="1.5"/>
+  <text x="596" y="786" font-size="14" font-weight="700" fill="#1f2933">LinkHistory</text>
+  <text x="684" y="786" font-size="12" fill="#52606d">(DB, ikke-optimert, retentiv)</text>
+  <text x="596" y="808" font-size="11" fill="#52606d">TcpLinkHistory: nextRecNo · clearedTo · rec[0..199], 4 008 byte</text>
+
+  <!-- ================= høyre: klienten ================= -->
+  <rect x="1016" y="300" width="152" height="400" rx="10" fill="#f7f3ec" stroke="#cdbf9f"/>
+  <text x="1030" y="326" font-size="14" font-weight="700" fill="#1f2933">Klient på PC</text>
+  <text x="1030" y="348" font-size="12" font-family="Consolas, Menlo, monospace" fill="#3e4c59">tcplink_web.js</text>
+  <text x="1030" y="366" font-size="12" fill="#52606d">eller terminalklient</text>
+
+  <line x1="1014" y1="353" x2="886" y2="353" stroke="#c2410c" stroke-width="2" marker-end="url(#a-orange)"/>
+  <text x="950" y="345" font-size="12" font-weight="700" fill="#c2410c" text-anchor="middle">kommandoer</text>
+  <text x="950" y="370" font-size="11" fill="#52606d" text-anchor="middle">hver 500. ms</text>
+
+  <line x1="886" y1="641" x2="1014" y2="641" stroke="#3e4c59" stroke-width="2" marker-end="url(#a-ink)"/>
+  <text x="950" y="633" font-size="12" font-weight="700" fill="#1f2933" text-anchor="middle">kind 0 · 1 · 2</text>
+  <text x="950" y="658" font-size="11" fill="#52606d" text-anchor="middle">data, navn, historikk</text>
+</svg>

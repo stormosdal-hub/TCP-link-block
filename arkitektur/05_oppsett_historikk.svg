@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 870" width="1200" height="870" role="img" aria-label="Oppsett av historikken i TIA Portal: to datatyper, TcpLinkHistRec og TcpLinkHistory. En retentiv DB LinkHistory av typen TcpLinkHistory, og en ny linje histMask av typen TcpLinkTxDigital i LinkDB. På TcpLink-kallet kobles hist til LinkHistory og histMask til LinkDB.histMask. histMask har samme indeks som txDigital." font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
+  <title>TcpLink – oppsett av historikken</title>
+  <desc>Steg 1: datatypene TcpLinkHistRec (én hendelse) og TcpLinkHistory (bufferen, med rec som array av TcpLinkHistRec), importert fra .udt-filene. Steg 2: DB-en LinkHistory av typen TcpLinkHistory, ikke-optimert og retentiv, og en ny linje histMask av typen TcpLinkTxDigital i LinkDB. Steg 3: på kallet kobles hist til "LinkHistory" og histMask til "LinkDB".histMask. Steg 4: histMask.bits[i] = TRUE logger txDigital.bits[i]; settes i koden ved siden av tilordningen eller som startverdier.</desc>
+  <defs>
+    <marker id="a-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3e4c59"/></marker>
+    <marker id="a-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7048e8"/></marker>
+  </defs>
+
+  <rect width="1200" height="870" fill="#ffffff"/>
+
+  <text x="32" y="44" font-size="22" font-weight="700" fill="#1f2933">Oppsett av historikken i TIA Portal</text>
+  <text x="32" y="70" font-size="13" fill="#52606d">To datatyper, én retentiv DB, én ny linje i LinkDB, og to nye koblinger på TcpLink-kallet.</text>
+
+  <!-- ================= 1 datatyper ================= -->
+  <circle cx="43" cy="112" r="11" fill="#3e4c59"/>
+  <text x="43" y="116" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+  <text x="62" y="117" font-size="15" font-weight="700" fill="#1f2933">Datatyper</text>
+  <text x="62" y="136" font-size="12" fill="#52606d">PLC data types · fra .udt-filene, ingenting å fylle ut</text>
+
+  <rect x="32" y="154" width="320" height="146" rx="8" fill="#ffffff" stroke="#7b8794"/>
+  <text x="48" y="178" font-size="13" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">TcpLinkHistRec</text>
+  <text x="172" y="178" font-size="11" fill="#52606d">én hendelse · 20 byte</text>
+  <line x1="48" y1="188" x2="336" y2="188" stroke="#e4e7eb"/>
+  <g font-family="Consolas, Menlo, monospace" font-size="12" fill="#3e4c59">
+    <text x="48" y="208">recNo</text>   <text x="132" y="208" fill="#7b8794">UDInt</text>
+    <text x="48" y="226">ts</text>      <text x="132" y="226" fill="#7b8794">DTL</text>
+    <text x="48" y="244">section</text> <text x="132" y="244" fill="#7b8794">Byte</text>
+    <text x="48" y="262">index</text>   <text x="132" y="262" fill="#7b8794">Byte</text>
+    <text x="48" y="280">value</text>   <text x="132" y="280" fill="#7b8794">Word</text>
+  </g>
+
+  <line x1="192" y1="302" x2="192" y2="330" stroke="#3e4c59" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#a-ink)"/>
+  <text x="204" y="320" font-size="11" fill="#52606d">brukes i rec</text>
+
+  <rect x="32" y="332" width="320" height="124" rx="8" fill="#ffffff" stroke="#7b8794"/>
+  <text x="48" y="356" font-size="13" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">TcpLinkHistory</text>
+  <text x="172" y="356" font-size="11" fill="#52606d">hele bufferen</text>
+  <line x1="48" y1="366" x2="336" y2="366" stroke="#e4e7eb"/>
+  <g font-family="Consolas, Menlo, monospace" font-size="12" fill="#3e4c59">
+    <text x="48" y="386">nextRecNo</text> <text x="132" y="386" fill="#7b8794">UDInt := 1</text>
+    <text x="48" y="404">clearedTo</text> <text x="132" y="404" fill="#7b8794">UDInt</text>
+    <text x="48" y="422">rec</text>       <text x="132" y="422" font-size="11" fill="#7b8794">Array[0..199] of "TcpLinkHistRec"</text>
+  </g>
+  <text x="48" y="444" font-size="11" fill="#52606d">endre 199 for flere eller færre plasser (20 byte hver)</text>
+
+  <rect x="32" y="484" width="320" height="92" rx="8" fill="#ffffff" stroke="#9aa5b1" stroke-dasharray="4 3"/>
+  <text x="48" y="508" font-size="13" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">TcpLinkTxDigital</text>
+  <text x="188" y="508" font-size="11" fill="#52606d">finnes fra før</text>
+  <g font-family="Consolas, Menlo, monospace" font-size="12" fill="#3e4c59">
+    <text x="48" y="532">bits</text>  <text x="132" y="532" fill="#7b8794">Array[0..31] of Bool</text>
+    <text x="48" y="550">words</text> <text x="132" y="550" fill="#7b8794">Array[0..7] of Word</text>
+    <text x="48" y="568">times</text> <text x="132" y="568" fill="#7b8794">Array[0..3] of DTL</text>
+  </g>
+
+  <!-- ================= 2 datablokker ================= -->
+  <circle cx="403" cy="112" r="11" fill="#3e4c59"/>
+  <text x="403" y="116" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+  <text x="422" y="117" font-size="15" font-weight="700" fill="#1f2933">Datablokker</text>
+  <text x="422" y="136" font-size="12" fill="#52606d">Program blocks</text>
+
+  <rect x="392" y="154" width="320" height="146" rx="8" fill="#f3f0fe" stroke="#7048e8" stroke-width="1.5"/>
+  <text x="408" y="178" font-size="14" font-weight="700" fill="#1f2933">LinkHistory</text>
+  <text x="496" y="178" font-size="12" fill="#52606d">DB av typen TcpLinkHistory</text>
+  <g font-size="10" fill="#7b8794" letter-spacing="0.5">
+    <text x="408" y="202">NAVN</text>
+    <text x="504" y="202">DATATYPE</text>
+    <text x="700" y="202" text-anchor="end">RETAIN</text>
+  </g>
+  <line x1="408" y1="208" x2="700" y2="208" stroke="#cdbff7"/>
+  <g font-family="Consolas, Menlo, monospace" font-size="12" fill="#3e4c59">
+    <text x="408" y="228">nextRecNo</text> <text x="504" y="228" fill="#7b8794">UDInt</text>
+    <text x="408" y="248">clearedTo</text> <text x="504" y="248" fill="#7b8794">UDInt</text>
+    <text x="408" y="268">rec</text>       <text x="504" y="268" fill="#7b8794">Array[0..199]</text>
+  </g>
+  <g fill="#7048e8" stroke="#7048e8">
+    <rect x="680" y="218" width="12" height="12" rx="2"/>
+    <rect x="680" y="238" width="12" height="12" rx="2"/>
+    <rect x="680" y="258" width="12" height="12" rx="2"/>
+  </g>
+  <g fill="none" stroke="#ffffff" stroke-width="2">
+    <path d="M682.5,224 L685,227 L690,221"/>
+    <path d="M682.5,244 L685,247 L690,241"/>
+    <path d="M682.5,264 L685,267 L690,261"/>
+  </g>
+  <text x="408" y="290" font-size="11" fill="#52606d">Retain krysset av · Optimized block access av</text>
+
+  <rect x="392" y="332" width="320" height="210" rx="8" fill="#eef4fb" stroke="#9db4cf"/>
+  <text x="408" y="356" font-size="14" font-weight="700" fill="#1f2933">LinkDB</text>
+  <text x="462" y="356" font-size="12" fill="#52606d">din DB fra før · ikke-optimert</text>
+  <g font-size="10" fill="#7b8794" letter-spacing="0.5">
+    <text x="408" y="380">NAVN</text>
+    <text x="504" y="380">DATATYPE</text>
+  </g>
+  <line x1="408" y1="386" x2="700" y2="386" stroke="#c5d3e3"/>
+  <g font-family="Consolas, Menlo, monospace" font-size="12" fill="#3e4c59">
+    <text x="408" y="406">txDigital</text> <text x="504" y="406" fill="#7b8794">"TcpLinkTxDigital"</text>
+    <text x="408" y="426">txAnalog</text>  <text x="504" y="426" fill="#7b8794">"TcpLinkTxAnalog"</text>
+    <text x="408" y="446">deadband</text>  <text x="504" y="446" fill="#7b8794">"TcpLinkTxAnalog"</text>
+    <text x="408" y="466">rx</text>        <text x="504" y="466" fill="#7b8794">"TcpLinkRx"</text>
+  </g>
+  <rect x="400" y="477" width="304" height="22" rx="4" fill="#ece6fd"/>
+  <text x="408" y="492" font-size="12" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#7048e8">histMask</text>
+  <text x="504" y="492" font-size="12" font-family="Consolas, Menlo, monospace" fill="#7048e8">"TcpLinkTxDigital"</text>
+  <text x="698" y="492" font-size="10" font-weight="700" fill="#7048e8" text-anchor="end">NY</text>
+  <text x="408" y="526" font-size="11" fill="#52606d">legg til én linje: histMask, samme type som txDigital</text>
+
+  <!-- typepiler mellom 1 og 2 -->
+  <path d="M352,394 H372 V226 H390" fill="none" stroke="#3e4c59" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#a-ink)"/>
+  <path d="M352,530 H372 V488 H398" fill="none" stroke="#7048e8" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#a-purple)"/>
+
+  <!-- ================= 3 kallet ================= -->
+  <circle cx="771" cy="112" r="11" fill="#3e4c59"/>
+  <text x="771" y="116" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+  <text x="790" y="117" font-size="15" font-weight="700" fill="#1f2933">Kallet i OB1</text>
+  <text x="790" y="136" font-size="12" fill="#52606d">pinnene hist og histMask er nye</text>
+
+  <rect x="760" y="154" width="408" height="200" rx="8" fill="#f5f7fa" stroke="#cbd2d9"/>
+  <rect x="768" y="187" width="392" height="21" rx="3" fill="#ece6fd"/>
+  <rect x="768" y="297" width="392" height="21" rx="3" fill="#ece6fd"/>
+  <g font-family="Consolas, Menlo, monospace" font-size="12" fill="#1f2933">
+    <text x="776" y="180">"TcpLink_DB"(</text>
+    <text x="796" y="202" font-weight="700" fill="#7048e8">hist</text>      <text x="884" y="202" fill="#7048e8">:= "LinkHistory",</text>
+    <text x="796" y="224">names</text>     <text x="884" y="224">:= "LinkNames",</text>
+    <text x="796" y="246">txDigital</text> <text x="884" y="246">:= "LinkDB".txDigital,</text>
+    <text x="796" y="268">txAnalog</text>  <text x="884" y="268">:= "LinkDB".txAnalog,</text>
+    <text x="796" y="290">deadband</text>  <text x="884" y="290">:= "LinkDB".deadband,</text>
+    <text x="796" y="312" font-weight="700" fill="#7048e8">histMask</text>  <text x="884" y="312" fill="#7048e8">:= "LinkDB".histMask,</text>
+    <text x="796" y="334">rx</text>        <text x="884" y="334">=&gt; "LinkDB".rx);</text>
+  </g>
+  <g font-size="10" font-weight="700" fill="#7048e8" text-anchor="end">
+    <text x="1154" y="202">NY</text>
+    <text x="1154" y="312">NY</text>
+  </g>
+
+  <!-- koblinger fra 2 til 3 -->
+  <line x1="712" y1="198" x2="758" y2="198" stroke="#7048e8" stroke-width="2" marker-end="url(#a-purple)"/>
+  <path d="M712,488 H736 V308 H758" fill="none" stroke="#7048e8" stroke-width="2" marker-end="url(#a-purple)"/>
+
+  <g font-size="12">
+    <text x="760" y="382" fill="#1f2933">hist: hele DB-en "LinkHistory", ikke et medlem i den.</text>
+    <text x="760" y="401" fill="#1f2933">histMask: linjen du la til i LinkDB.</text>
+    <text x="760" y="426" fill="#52606d">I LAD/FBD heter pinnene det samme.</text>
+    <text x="760" y="445" fill="#52606d">Etter import: høyreklikk kallet → Update block call.</text>
+    <text x="760" y="464" fill="#52606d">hist må kobles til. histClear kan stå tom.</text>
+    <text x="760" y="483" fill="#52606d">histNewest, histSentTo og histLost er valgfrie utganger.</text>
+  </g>
+
+  <!-- ================= 4 hva som logges ================= -->
+  <line x1="32" y1="598" x2="1168" y2="598" stroke="#e4e7eb"/>
+  <circle cx="43" cy="628" r="11" fill="#3e4c59"/>
+  <text x="43" y="632" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+  <text x="62" y="633" font-size="15" font-weight="700" fill="#1f2933">Hva som logges</text>
+  <text x="62" y="652" font-size="12" fill="#52606d">histMask har samme form som txDigital, så indeksen er den samme</text>
+
+  <g font-family="Consolas, Menlo, monospace" font-size="10" fill="#7b8794" text-anchor="middle">
+    <text x="203" y="682">0</text> <text x="257" y="682">1</text> <text x="311" y="682">2</text> <text x="365" y="682">3</text>
+    <text x="419" y="682">4</text> <text x="473" y="682">5</text> <text x="527" y="682">6</text> <text x="581" y="682">7</text>
+  </g>
+  <text x="32" y="708" font-size="12" font-family="Consolas, Menlo, monospace" fill="#1f2933">txDigital.bits</text>
+  <g stroke="#ffffff" stroke-width="1.5" fill="#dbe8fa">
+    <rect x="176" y="690" width="54" height="30"/> <rect x="230" y="690" width="54" height="30"/>
+    <rect x="284" y="690" width="54" height="30"/> <rect x="338" y="690" width="54" height="30" fill="#c6dbf7"/>
+    <rect x="392" y="690" width="54" height="30"/> <rect x="446" y="690" width="54" height="30"/>
+    <rect x="500" y="690" width="54" height="30"/> <rect x="554" y="690" width="54" height="30"/>
+  </g>
+  <rect x="176" y="690" width="432" height="30" fill="none" stroke="#9aa5b1"/>
+  <g font-size="10" fill="#1f2933" text-anchor="middle">
+    <text x="203" y="709">Nødstopp</text> <text x="257" y="709">Kjører</text> <text x="311" y="709">Bøyle</text>
+    <text x="365" y="709" font-weight="700">Feil</text> <text x="419" y="709">…</text> <text x="473" y="709">…</text>
+    <text x="527" y="709">Container</text> <text x="581" y="709">…</text>
+  </g>
+
+  <text x="32" y="778" font-size="12" font-family="Consolas, Menlo, monospace" fill="#1f2933">histMask.bits</text>
+  <g stroke="#ffffff" stroke-width="1.5" fill="#f5f7fa">
+    <rect x="176" y="760" width="54" height="30"/> <rect x="230" y="760" width="54" height="30"/>
+    <rect x="284" y="760" width="54" height="30"/> <rect x="338" y="760" width="54" height="30" fill="#ece6fd"/>
+    <rect x="392" y="760" width="54" height="30"/> <rect x="446" y="760" width="54" height="30"/>
+    <rect x="500" y="760" width="54" height="30"/> <rect x="554" y="760" width="54" height="30"/>
+  </g>
+  <rect x="176" y="760" width="432" height="30" fill="none" stroke="#9aa5b1"/>
+  <rect x="338" y="760" width="54" height="30" fill="none" stroke="#7048e8" stroke-width="1.5"/>
+  <g font-size="10" font-family="Consolas, Menlo, monospace" fill="#9aa5b1" text-anchor="middle">
+    <text x="203" y="779">FALSE</text> <text x="257" y="779">FALSE</text> <text x="311" y="779">FALSE</text>
+    <text x="365" y="779" font-weight="700" fill="#7048e8">TRUE</text>
+    <text x="419" y="779">FALSE</text> <text x="473" y="779">FALSE</text> <text x="527" y="779">FALSE</text> <text x="581" y="779">FALSE</text>
+  </g>
+
+  <line x1="365" y1="722" x2="365" y2="758" stroke="#7048e8" stroke-width="1.5" marker-start="url(#a-purple)" marker-end="url(#a-purple)"/>
+  <text x="375" y="744" font-size="11" fill="#7048e8">samme indeks: bits[3] logges</text>
+
+  <text x="176" y="814" font-size="11" fill="#52606d">bits[i] = TRUE logger hver endring av txDigital.bits[i]. FALSE = ikke logg.</text>
+  <text x="176" y="832" font-size="11" fill="#52606d">words[i] er en maske: 16#FFFF = alle endringer, 16#0008 = bare bit 3, 0 = ikke logg.</text>
+
+  <rect x="660" y="672" width="508" height="118" rx="8" fill="#f5f7fa" stroke="#cbd2d9"/>
+  <text x="676" y="694" font-size="12" font-weight="700" fill="#1f2933">Anbefalt: i OB1, ved siden av tilordningen (steg 3)</text>
+  <g font-family="Consolas, Menlo, monospace" font-size="11.5">
+    <text x="676" y="718" fill="#1f2933">"LinkDB".txDigital.bits[3] := "IO".feil;</text>
+    <text x="676" y="736" fill="#7048e8">"LinkDB".histMask.bits[3] := TRUE;</text>
+    <text x="676" y="760" fill="#1f2933">"LinkDB".txDigital.words[0] := "Drive".faultCode;</text>
+    <text x="676" y="778" fill="#7048e8">"LinkDB".histMask.words[0] := 16#FFFF;</text>
+  </g>
+  <text x="660" y="814" font-size="12" font-weight="700" fill="#1f2933">Eller som startverdier i LinkDB, uten kode:</text>
+  <text x="660" y="832" font-size="12" fill="#52606d">histMask → bits → [3], Start value = TRUE. Gjelder først etter reinitialisering.</text>
+
+  <text x="32" y="860" font-size="11" fill="#7b8794">Stiplet pil: «er av typen». Heltrukket pil: kobles til.</text>
+</svg>

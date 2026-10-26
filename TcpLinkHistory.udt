@@ -1,0 +1,23 @@
+﻿TYPE "TcpLinkHistory"
+VERSION : 1.0
+   STRUCT
+      // Historikken: en ringbuffer med de siste hendelsene i txDigital.
+      // Lag ÉN ikke-optimert, RETENTIV global DB av denne typen (se
+      // LinkHistory.db) og koble den til 'hist' på TcpLink. Den sendes som
+      // referanse, så bufferen finnes bare én gang i minnet.
+      //
+      // TcpLink fyller den selv. Post nummer r ligger alltid på plass
+      // (r - 1) MOD størrelsen, så det trengs ingen lese- eller skrivepeker:
+      // løpenummeret sier hvor posten ligger og hvilke som er eldst.
+      //
+      // STØRRELSE: endre den øvre grensen på rec, ingenting annet. Hver post
+      // er 20 byte, så 200 poster er 4 008 byte retentivt minne med de to
+      // tellerne. En 1215C har høyst 10 KB retentivt minne TOTALT, delt med
+      // alt annet som er retentivt i programmet. Sjekk under Program info ->
+      // Resources -> Retain memory før du gjør den større.
+
+      nextRecNo : UDInt := 1;   // neste løpenummer som deles ut; 0 behandles som 1
+      clearedTo : UDInt;        // alt til og med dette nummeret er slettet (histClear)
+      rec : Array[0..199] of "TcpLinkHistRec";
+   END_STRUCT;
+END_TYPE

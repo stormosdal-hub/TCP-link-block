@@ -1,0 +1,275 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 860" width="1200" height="860" role="img" aria-label="Meldingsformatet: alle meldinger starter med de samme 8 bytene. Datamelding 196 byte og kommandoramme 80 byte i samme målestokk, navnemelding 2584 byte, historikkmelding 32 + 20 byte per post. Layoutbytene 6 til 11 i datameldingen forteller PC-en størrelsene i kommandorammen." font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
+  <title>TcpLink – meldingsformatet på linjen</title>
+  <desc>Felles header: magic, ver, len, seq, flags, kind. Datamelding fra PLS: header, layout, tidsstempel, og så txDigital og txAnalog slik de ligger i UDT-ene. Kommandoramme fra PC: header, layout, og TcpLinkRx uten pulse. Navnemelding fra PLS: header, antall navn per seksjon, reserve, og S7-strengene. Historikkmelding fra PLS: header, nyeste og eldste løpenummer, kapasitet, antall, slettet til, og opptil 16 poster på 20 byte.</desc>
+  <defs>
+    <marker id="a-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/></marker>
+  </defs>
+
+  <rect width="1200" height="860" fill="#ffffff"/>
+
+  <text x="32" y="44" font-size="22" font-weight="700" fill="#1f2933">Meldingsformatet på linjen</text>
+  <text x="32" y="70" font-size="13" fill="#52606d">Alle meldinger starter med de samme 8 bytene. Layoutbytene sier hvor seksjonene ligger, og hvordan PC-en skal bygge kommandorammen.</text>
+
+  <!-- ================= felles header ================= -->
+  <text x="32" y="128" font-size="13" font-weight="700" fill="#1f2933">Felles header</text>
+  <text x="32" y="146" font-size="12" fill="#52606d">8 byte i alle meldinger</text>
+
+  <g font-family="Consolas, Menlo, monospace" font-size="10" fill="#7b8794" text-anchor="middle">
+    <text x="235" y="102">0</text>
+    <text x="305" y="102">1</text>
+    <text x="410" y="102">2–3</text>
+    <text x="550" y="102">4–5</text>
+    <text x="655" y="102">6</text>
+    <text x="725" y="102">7</text>
+  </g>
+  <g fill="#e6e9ee" stroke="#ffffff" stroke-width="1.5">
+    <rect x="200" y="108" width="70" height="48"/>
+    <rect x="270" y="108" width="70" height="48"/>
+    <rect x="340" y="108" width="140" height="48"/>
+    <rect x="480" y="108" width="140" height="48"/>
+    <rect x="620" y="108" width="70" height="48"/>
+    <rect x="690" y="108" width="70" height="48"/>
+  </g>
+  <rect x="200" y="108" width="560" height="48" fill="none" stroke="#9aa5b1"/>
+  <g text-anchor="middle">
+    <g font-family="Consolas, Menlo, monospace" font-size="12" font-weight="700" fill="#1f2933">
+      <text x="235" y="128">magic</text>
+      <text x="305" y="128">ver</text>
+      <text x="410" y="128">len</text>
+      <text x="550" y="128">seq</text>
+      <text x="655" y="128">flags</text>
+      <text x="725" y="128">kind</text>
+    </g>
+    <g font-size="11" fill="#52606d">
+      <text x="235" y="146">A5 / 5A</text>
+      <text x="305" y="146">7 / 3</text>
+      <text x="410" y="146">antall byte</text>
+      <text x="550" y="146">+1 per melding</text>
+      <text x="655" y="146">lokal tid</text>
+      <text x="725" y="146">0 / 1 / 2</text>
+    </g>
+  </g>
+  <text x="790" y="126" font-size="12" fill="#52606d">A5 = fra PLS-en, 5A = fra PC-en</text>
+  <text x="790" y="144" font-size="12" fill="#52606d">kind: 0 = data, 1 = navn, 2 = historikk (bare fra PLS-en)</text>
+
+  <!-- ================= datamelding ================= -->
+  <text x="32" y="230" font-size="13" font-weight="700" fill="#1f2933">Datamelding</text>
+  <text x="32" y="248" font-size="12" fill="#52606d">PLS → PC · 196 byte</text>
+
+  <g stroke="#ffffff" stroke-width="1.5">
+    <rect x="200" y="212" width="39.6" height="44" fill="#e6e9ee"/>
+    <rect x="239.6" y="212" width="29.7" height="44" fill="#d5dbe3"/>
+    <rect x="269.3" y="212" width="29.7" height="44" fill="#f2c9b0"/>
+    <rect x="299" y="212" width="59.4" height="44" fill="#e6e9ee"/>
+    <rect x="358.4" y="212" width="19.8" height="44" fill="#c6dbf7"/>
+    <rect x="378.2" y="212" width="79.1" height="44" fill="#dbe8fa"/>
+    <rect x="457.3" y="212" width="237.6" height="44" fill="#c6dbf7"/>
+    <rect x="694.9" y="212" width="158.4" height="44" fill="#dbe8fa"/>
+    <rect x="853.3" y="212" width="158.3" height="44" fill="#c6dbf7"/>
+    <rect x="1011.6" y="212" width="158.4" height="44" fill="#dbe8fa"/>
+  </g>
+  <rect x="200" y="212" width="970" height="44" fill="none" stroke="#9aa5b1"/>
+  <g text-anchor="middle" fill="#1f2933">
+    <text x="219.8" y="238" font-size="10">header</text>
+    <text x="254.5" y="238" font-size="10">tx</text>
+    <text x="284.2" y="238" font-size="10">rx</text>
+    <text x="328.7" y="239" font-size="11">ts (DTL)</text>
+    <text x="417.8" y="239" font-size="11">words</text>
+    <text x="576.1" y="239" font-size="11">times · 4 × DTL</text>
+    <text x="774.1" y="239" font-size="11">ints · 16 × Int</text>
+    <text x="932.5" y="239" font-size="11">dints · 8 × DInt</text>
+    <text x="1090.8" y="239" font-size="11">reals · 8 × Real</text>
+  </g>
+  <text x="269.3" y="206" font-size="10" fill="#1f2933" text-anchor="middle">layout</text>
+  <text x="368.3" y="206" font-size="10" fill="#1f2933" text-anchor="middle">bits</text>
+
+  <g font-family="Consolas, Menlo, monospace" font-size="10" fill="#7b8794" text-anchor="middle">
+    <text x="200" y="272">0</text>
+    <text x="239.6" y="272">8</text>
+    <text x="299" y="272">20</text>
+    <text x="358.4" y="272">32</text>
+    <text x="457.3" y="272">52</text>
+    <text x="694.9" y="272">100</text>
+    <text x="853.3" y="272">132</text>
+    <text x="1011.6" y="272">164</text>
+    <text x="1170" y="272">196</text>
+  </g>
+  <g fill="none" stroke="#7b8794">
+    <path d="M358.4,282 V288 H692.9 V282"/>
+    <path d="M696.9,282 V288 H1170 V282"/>
+  </g>
+  <g font-family="Consolas, Menlo, monospace" font-size="11" fill="#52606d" text-anchor="middle">
+    <text x="525.6" y="304">txDigital, kopiert som den er</text>
+    <text x="933.4" y="304">txAnalog, kopiert som den er</text>
+  </g>
+
+  <!-- layout[6..11] forteller PC-en størrelsene i kommandorammen -->
+  <path d="M284.2,258 V330 H254.5 V352" fill="none" stroke="#c2410c" stroke-width="1.5" marker-end="url(#a-orange)"/>
+  <text x="298" y="334" font-size="12" fill="#c2410c">layout[6..11] = størrelsene PC-en skal sende i kommandorammen</text>
+
+  <!-- ================= kommandoramme ================= -->
+  <text x="32" y="390" font-size="13" font-weight="700" fill="#1f2933">Kommandoramme</text>
+  <text x="32" y="408" font-size="12" fill="#52606d">PC → PLS · 80 byte</text>
+
+  <g stroke="#ffffff" stroke-width="1.5">
+    <rect x="200" y="372" width="39.6" height="44" fill="#e6e9ee"/>
+    <rect x="239.6" y="372" width="29.7" height="44" fill="#f2c9b0"/>
+    <rect x="269.3" y="372" width="9.9" height="44" fill="#f8d3bd"/>
+    <rect x="279.2" y="372" width="39.6" height="44" fill="#fde3d3"/>
+    <rect x="318.8" y="372" width="118.8" height="44" fill="#f8d3bd"/>
+    <rect x="437.6" y="372" width="79.1" height="44" fill="#fde3d3"/>
+    <rect x="516.7" y="372" width="79.2" height="44" fill="#f8d3bd"/>
+  </g>
+  <rect x="200" y="372" width="395.9" height="44" fill="none" stroke="#9aa5b1"/>
+  <g text-anchor="middle" fill="#1f2933">
+    <text x="219.8" y="398" font-size="10">header</text>
+    <text x="299" y="398" font-size="10">words</text>
+    <text x="378.2" y="399" font-size="11">ints · 12 × Int</text>
+    <text x="477.2" y="399" font-size="11">dints · 4</text>
+    <text x="556.3" y="399" font-size="11">reals · 4</text>
+  </g>
+  <text x="254.5" y="366" font-size="10" font-weight="700" fill="#c2410c" text-anchor="middle">layout</text>
+  <text x="281" y="366" font-size="10" fill="#1f2933">bits</text>
+
+  <g font-family="Consolas, Menlo, monospace" font-size="10" fill="#7b8794" text-anchor="middle">
+    <text x="200" y="432">0</text>
+    <text x="239.6" y="432">8</text>
+    <text x="269.3" y="432">14</text>
+    <text x="318.8" y="432">24</text>
+    <text x="437.6" y="432">48</text>
+    <text x="516.7" y="432">64</text>
+    <text x="595.9" y="432">80</text>
+  </g>
+  <path d="M269.3,442 V448 H595.9 V442" fill="none" stroke="#7b8794"/>
+  <text x="432.6" y="464" font-family="Consolas, Menlo, monospace" font-size="11" fill="#52606d" text-anchor="middle">TcpLinkRx uten pulse</text>
+
+  <text x="640" y="390" font-size="12" fill="#52606d">Samme målestokk som datameldingen.</text>
+  <text x="640" y="408" font-size="12" fill="#52606d">TRCV i PLS-en venter på nøyaktig len byte per ramme.</text>
+
+  <!-- ================= navnemelding ================= -->
+  <text x="32" y="538" font-size="13" font-weight="700" fill="#1f2933">Navnemelding</text>
+  <text x="32" y="556" font-size="12" fill="#52606d">PLS → PC · 2 584 byte</text>
+
+  <g stroke="#ffffff" stroke-width="1.5">
+    <rect x="200" y="520" width="39.6" height="44" fill="#e6e9ee"/>
+    <rect x="239.6" y="520" width="59.4" height="44" fill="#d5dbe3"/>
+    <rect x="299" y="520" width="59.4" height="44" fill="#e6e9ee"/>
+    <rect x="358.4" y="520" width="811.6" height="44" fill="#d8f0dd"/>
+  </g>
+  <!-- brudd: strengene er ikke tegnet i målestokk -->
+  <g stroke="#ffffff" stroke-width="5">
+    <line x1="556" y1="516" x2="568" y2="568"/>
+    <line x1="568" y1="516" x2="580" y2="568"/>
+  </g>
+  <rect x="200" y="520" width="970" height="44" fill="none" stroke="#9aa5b1"/>
+  <g text-anchor="middle" fill="#1f2933">
+    <text x="219.8" y="546" font-size="10">header</text>
+    <text x="269.3" y="547" font-size="11">antall</text>
+    <text x="328.7" y="547" font-size="11">reserve</text>
+    <text x="870" y="540" font-size="12">strenger: 116 × String[20] = 2 552 byte</text>
+    <text x="870" y="556" font-size="10" fill="#52606d">ikke i målestokk</text>
+  </g>
+  <g font-family="Consolas, Menlo, monospace" font-size="10" fill="#7b8794" text-anchor="middle">
+    <text x="200" y="580">0</text>
+    <text x="239.6" y="580">8</text>
+    <text x="299" y="580">20</text>
+    <text x="358.4" y="580">32</text>
+    <text x="1170" y="580">2584</text>
+  </g>
+
+  <!-- én streng forstørret -->
+  <text x="200" y="621" font-size="12" fill="#52606d">Én String[20]:</text>
+  <g stroke="#ffffff" stroke-width="1.5">
+    <rect x="300" y="602" width="28" height="28" fill="#d5dbe3"/>
+    <rect x="328" y="602" width="28" height="28" fill="#d5dbe3"/>
+    <rect x="356" y="602" width="28" height="28" fill="#d8f0dd"/>
+    <rect x="384" y="602" width="28" height="28" fill="#d8f0dd"/>
+    <rect x="412" y="602" width="28" height="28" fill="#d8f0dd"/>
+    <rect x="440" y="602" width="28" height="28" fill="#d8f0dd"/>
+    <rect x="468" y="602" width="28" height="28" fill="#d8f0dd"/>
+    <rect x="496" y="602" width="84" height="28" fill="#f0f2f5"/>
+  </g>
+  <rect x="300" y="602" width="280" height="28" fill="none" stroke="#9aa5b1"/>
+  <g font-family="Consolas, Menlo, monospace" font-size="11" fill="#1f2933" text-anchor="middle">
+    <text x="314" y="620">14</text>
+    <text x="342" y="620">05</text>
+    <text x="370" y="620">S</text>
+    <text x="398" y="620">t</text>
+    <text x="426" y="620">a</text>
+    <text x="454" y="620">r</text>
+    <text x="482" y="620">t</text>
+    <text x="538" y="620">15 × 00</text>
+  </g>
+  <text x="596" y="621" font-size="11" fill="#52606d">maks lengde (20) · nåværende lengde (5) · tegn, fylt ut med nuller</text>
+
+  <!-- ================= historikkmelding ================= -->
+  <text x="32" y="700" font-size="13" font-weight="700" fill="#1f2933">Historikkmelding</text>
+  <text x="32" y="718" font-size="12" fill="#52606d">PLS → PC · 32 + 20 × antall</text>
+
+  <g font-family="Consolas, Menlo, monospace" font-size="10" fill="#7b8794" text-anchor="middle">
+    <text x="230" y="676">0–7</text>
+    <text x="295" y="676">8–11</text>
+    <text x="365" y="676">12–13</text>
+    <text x="430" y="676">14–15</text>
+    <text x="495" y="676">16–19</text>
+    <text x="570" y="676">20–23</text>
+    <text x="635" y="676">24–31</text>
+    <text x="710" y="676">32 …</text>
+  </g>
+  <g stroke="#ffffff" stroke-width="1.5">
+    <rect x="200" y="682" width="60" height="44" fill="#e6e9ee"/>
+    <rect x="260" y="682" width="70" height="44" fill="#d5dbe3"/>
+    <rect x="330" y="682" width="70" height="44" fill="#d5dbe3"/>
+    <rect x="400" y="682" width="60" height="44" fill="#d5dbe3"/>
+    <rect x="460" y="682" width="70" height="44" fill="#d5dbe3"/>
+    <rect x="530" y="682" width="80" height="44" fill="#d5dbe3"/>
+    <rect x="610" y="682" width="50" height="44" fill="#e6e9ee"/>
+    <rect x="660" y="682" width="100" height="44" fill="#e3dbfd"/>
+    <rect x="760" y="682" width="100" height="44" fill="#ece6fd"/>
+    <rect x="860" y="682" width="100" height="44" fill="#e3dbfd"/>
+  </g>
+  <rect x="200" y="682" width="760" height="44" fill="none" stroke="#9aa5b1"/>
+  <g text-anchor="middle" fill="#1f2933">
+    <text x="230" y="708" font-size="10">header</text>
+    <text x="295" y="709" font-size="11" font-family="Consolas, Menlo, monospace">newest</text>
+    <text x="365" y="709" font-size="11" font-family="Consolas, Menlo, monospace">capacity</text>
+    <text x="430" y="709" font-size="11" font-family="Consolas, Menlo, monospace">count</text>
+    <text x="495" y="709" font-size="11" font-family="Consolas, Menlo, monospace">oldest</text>
+    <text x="570" y="709" font-size="11" font-family="Consolas, Menlo, monospace">clearedTo</text>
+    <text x="635" y="708" font-size="10">reserve</text>
+    <text x="710" y="709" font-size="11">post</text>
+    <text x="810" y="709" font-size="11">post</text>
+    <text x="910" y="709" font-size="11">post</text>
+  </g>
+  <text x="972" y="709" font-size="12" fill="#7048e8">… opptil 16 poster</text>
+  <text x="200" y="746" font-size="11" fill="#52606d">ikke i målestokk · len = 32 + 20 × count · eldste post først · klienten beholder bare oldest..newest</text>
+
+  <!-- én post forstørret -->
+  <text x="32" y="800" font-size="13" font-weight="700" fill="#1f2933">Én post</text>
+  <text x="32" y="818" font-size="12" fill="#52606d">TcpLinkHistRec · 20 byte</text>
+  <text x="536" y="782" font-size="10" fill="#1f2933" text-anchor="end">section</text>
+  <text x="544" y="782" font-size="10" fill="#1f2933">index</text>
+  <g stroke="#ffffff" stroke-width="1.5">
+    <rect x="200" y="788" width="80" height="36" fill="#d5dbe3"/>
+    <rect x="280" y="788" width="240" height="36" fill="#ece6fd"/>
+    <rect x="520" y="788" width="20" height="36" fill="#e3dbfd"/>
+    <rect x="540" y="788" width="20" height="36" fill="#d5dbe3"/>
+    <rect x="560" y="788" width="40" height="36" fill="#e3dbfd"/>
+  </g>
+  <rect x="200" y="788" width="400" height="36" fill="none" stroke="#9aa5b1"/>
+  <g text-anchor="middle" fill="#1f2933" font-family="Consolas, Menlo, monospace" font-size="11">
+    <text x="240" y="810">recNo</text>
+    <text x="400" y="810">ts (DTL)</text>
+    <text x="580" y="810">value</text>
+  </g>
+  <g font-family="Consolas, Menlo, monospace" font-size="10" fill="#7b8794" text-anchor="middle">
+    <text x="200" y="840">0</text>
+    <text x="280" y="840">4</text>
+    <text x="520" y="840">16</text>
+    <text x="540" y="840">17</text>
+    <text x="560" y="840">18</text>
+    <text x="600" y="840">20</text>
+  </g>
+  <text x="620" y="804" font-size="11" fill="#52606d">recNo: løpenummer, nullstilles aldri · section: 0 = bits, 1 = words</text>
+  <text x="620" y="820" font-size="11" fill="#52606d">value: 0/1 for en bit, hele wordet for et word</text>
+</svg>

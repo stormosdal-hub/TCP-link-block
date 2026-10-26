@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" width="1200" height="720" role="img" aria-label="Systemoversikt: PLS-en lytter, en klient på PC-en kobler seg til. Data, navn og historikk går fra PLS til PC, kommandoer fra PC til PLS. Historikken ligger i en retentiv DB i PLS-en. Nettvisningen viser dataene og historikken videre til nettlesere." font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
+  <title>TcpLink – systemoversikt</title>
+  <desc>PLS-en lytter på localPort og tar imot én klient om gangen. Data (kind 0) sendes ved endring eller hvert sekund, navn (kind 1) én gang per tilkobling, historikk (kind 2) fra den retentive DB-en LinkHistory ved tilkobling og deretter for hver ny hendelse, og klienten sender kommandoer hvert 500. ms. Nettvisningen tcplink_web.js bruker protokollkoden i tcplink_client.js og sender videre til nettlesere med Server-Sent Events.</desc>
+  <defs>
+    <marker id="a-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3e4c59"/></marker>
+    <marker id="a-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1c64c8"/></marker>
+    <marker id="a-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2b8a3e"/></marker>
+    <marker id="a-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/></marker>
+    <marker id="a-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7048e8"/></marker>
+  </defs>
+
+  <rect width="1200" height="720" fill="#ffffff"/>
+
+  <text x="32" y="44" font-size="22" font-weight="700" fill="#1f2933">TcpLink – systemoversikt</text>
+  <text x="32" y="70" font-size="13" fill="#52606d">PLS-en lytter, klienten kobler seg til. Navn og historikk ligger i PLS-en og sendes ut til klienten ved hver tilkobling.</text>
+
+  <!-- ================= PLS ================= -->
+  <rect x="32" y="96" width="500" height="560" rx="14" fill="#eef4fb" stroke="#9db4cf"/>
+  <text x="52" y="126" font-size="15" font-weight="700" fill="#1f2933">PLS · S7-1200</text>
+  <text x="52" y="146" font-size="12" fill="#52606d">lytter på localPort (standard 2000)</text>
+
+  <!-- din logikk -->
+  <rect x="56" y="170" width="200" height="92" rx="8" fill="#ffffff" stroke="#7b8794"/>
+  <text x="72" y="196" font-size="14" font-weight="700" fill="#1f2933">Din logikk (OB1)</text>
+  <text x="72" y="218" font-size="12" fill="#52606d">1. kaller TcpLink</text>
+  <text x="72" y="236" font-size="12" fill="#52606d">2. leser rx</text>
+  <text x="72" y="254" font-size="12" fill="#52606d">3. skriver tx-dataene</text>
+
+  <!-- LinkDB -->
+  <rect x="56" y="318" width="200" height="146" rx="8" fill="#ffffff" stroke="#7b8794"/>
+  <text x="72" y="344" font-size="14" font-weight="700" fill="#1f2933">LinkDB</text>
+  <g font-family="Consolas, Menlo, monospace" font-size="12" fill="#3e4c59">
+    <text x="72" y="368">txDigital</text>
+    <text x="72" y="386">txAnalog</text>
+    <text x="72" y="404">deadband</text>
+    <text x="72" y="422">histMask</text>
+    <text x="72" y="440">rx</text>
+  </g>
+
+  <!-- LinkNames -->
+  <rect x="56" y="488" width="200" height="60" rx="8" fill="#ffffff" stroke="#7b8794"/>
+  <text x="72" y="512" font-size="14" font-weight="700" fill="#1f2933">LinkNames</text>
+  <text x="72" y="534" font-size="12" fill="#52606d">navn som strenger</text>
+
+  <!-- LinkHistory -->
+  <rect x="56" y="564" width="200" height="60" rx="8" fill="#ffffff" stroke="#7048e8" stroke-width="1.5"/>
+  <text x="72" y="588" font-size="14" font-weight="700" fill="#1f2933">LinkHistory</text>
+  <text x="72" y="610" font-size="12" fill="#52606d">retentiv ringbuffer</text>
+
+  <!-- TcpLink FB -->
+  <rect x="316" y="170" width="196" height="454" rx="8" fill="#ffffff" stroke="#3e4c59" stroke-width="1.5"/>
+  <text x="332" y="196" font-size="14" font-weight="700" fill="#1f2933">TcpLink (FB)</text>
+  <g stroke="#e4e7eb">
+    <line x1="332" y1="262" x2="496" y2="262"/>
+    <line x1="332" y1="316" x2="496" y2="316"/>
+    <line x1="332" y1="370" x2="496" y2="370"/>
+    <line x1="332" y1="424" x2="496" y2="424"/>
+    <line x1="332" y1="478" x2="496" y2="478"/>
+    <line x1="332" y1="532" x2="496" y2="532"/>
+  </g>
+  <g font-size="12">
+    <text x="332" y="230" font-family="Consolas, Menlo, monospace" font-weight="700" fill="#3e4c59">TcpLinkCount</text>
+    <text x="332" y="248" fill="#52606d">størrelser fra UDT-ene</text>
+    <text x="332" y="284" font-family="Consolas, Menlo, monospace" font-weight="700" fill="#3e4c59">TCON · TDISCON</text>
+    <text x="332" y="302" fill="#52606d">tilstandsmaskin</text>
+    <text x="332" y="338" font-family="Consolas, Menlo, monospace" font-weight="700" fill="#3e4c59">TRCV</text>
+    <text x="332" y="356" fill="#52606d">kommandoer inn → rx</text>
+    <text x="332" y="392" font-weight="700" fill="#3e4c59">endringer</text>
+    <text x="332" y="410" fill="#52606d">dødbånd · heartbeat</text>
+    <text x="332" y="446" font-weight="700" fill="#7048e8">historikk</text>
+    <text x="332" y="464" fill="#52606d">logger alltid, også uten klient</text>
+    <text x="332" y="500" font-family="Consolas, Menlo, monospace" font-weight="700" fill="#3e4c59">TSEND</text>
+    <text x="332" y="518" fill="#52606d">data, navn og historikk ut</text>
+    <text x="332" y="554" font-weight="700" fill="#3e4c59">diagnose</text>
+    <text x="332" y="572" fill="#52606d">låste feilkoder, tellere</text>
+  </g>
+
+  <!-- piler inne i PLS-en -->
+  <line x1="156" y1="264" x2="156" y2="316" stroke="#3e4c59" stroke-width="1.5" marker-start="url(#a-ink)" marker-end="url(#a-ink)"/>
+  <text x="166" y="294" font-size="11" fill="#52606d">skriver / leser</text>
+
+  <line x1="258" y1="372" x2="314" y2="372" stroke="#3e4c59" stroke-width="1.5" marker-end="url(#a-ink)"/>
+  <text x="286" y="364" font-size="11" fill="#52606d" text-anchor="middle">tx</text>
+  <line x1="314" y1="398" x2="258" y2="398" stroke="#3e4c59" stroke-width="1.5" marker-end="url(#a-ink)"/>
+  <text x="286" y="414" font-size="11" fill="#52606d" text-anchor="middle">rx</text>
+
+  <line x1="258" y1="518" x2="314" y2="518" stroke="#2b8a3e" stroke-width="1.5" marker-end="url(#a-green)"/>
+  <text x="286" y="510" font-size="11" fill="#2b8a3e" text-anchor="middle">names</text>
+
+  <line x1="258" y1="594" x2="314" y2="594" stroke="#7048e8" stroke-width="1.5" marker-start="url(#a-purple)" marker-end="url(#a-purple)"/>
+  <text x="286" y="586" font-size="11" fill="#7048e8" text-anchor="middle">hist</text>
+  <text x="286" y="610" font-size="10" fill="#52606d" text-anchor="middle">referanse</text>
+
+  <!-- ================= TCP ================= -->
+  <text x="622" y="196" font-size="12" font-weight="700" fill="#1f2933" text-anchor="middle">TCP · én forbindelse</text>
+  <text x="622" y="212" font-size="11" fill="#52606d" text-anchor="middle">PC-en kobler til PLS-en</text>
+
+  <line x1="514" y1="252" x2="734" y2="252" stroke="#1c64c8" stroke-width="2" marker-end="url(#a-blue)"/>
+  <text x="622" y="244" font-size="12" font-weight="700" fill="#1c64c8" text-anchor="middle">data · kind 0</text>
+  <text x="622" y="268" font-size="11" fill="#52606d" text-anchor="middle">ved endring · ellers hvert sekund</text>
+
+  <line x1="514" y1="306" x2="734" y2="306" stroke="#2b8a3e" stroke-width="2" marker-end="url(#a-green)"/>
+  <text x="622" y="298" font-size="12" font-weight="700" fill="#2b8a3e" text-anchor="middle">navn · kind 1</text>
+  <text x="622" y="322" font-size="11" fill="#52606d" text-anchor="middle">én gang per tilkobling</text>
+
+  <line x1="514" y1="360" x2="734" y2="360" stroke="#7048e8" stroke-width="2" marker-end="url(#a-purple)"/>
+  <text x="622" y="352" font-size="12" font-weight="700" fill="#7048e8" text-anchor="middle">historikk · kind 2</text>
+  <text x="622" y="376" font-size="11" fill="#52606d" text-anchor="middle">hele bufferen ved tilkobling, så nye</text>
+
+  <line x1="734" y1="414" x2="514" y2="414" stroke="#c2410c" stroke-width="2" marker-end="url(#a-orange)"/>
+  <text x="622" y="406" font-size="12" font-weight="700" fill="#c2410c" text-anchor="middle">kommandoer</text>
+  <text x="622" y="430" font-size="11" fill="#52606d" text-anchor="middle">hvert 500. ms · holder linken i live</text>
+
+  <!-- én klient om gangen -->
+  <path d="M736,532 H622 V446" fill="none" stroke="#7b8794" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="632" y="500" font-size="11" fill="#52606d">eller</text>
+  <text x="622" y="590" font-size="12" font-weight="700" fill="#1f2933" text-anchor="middle">én klient om gangen</text>
+  <text x="622" y="606" font-size="11" fill="#52606d" text-anchor="middle">per TcpLink-instans</text>
+
+  <!-- ================= PC ================= -->
+  <rect x="712" y="96" width="456" height="560" rx="14" fill="#f7f3ec" stroke="#cdbf9f"/>
+  <text x="732" y="126" font-size="15" font-weight="700" fill="#1f2933">PC · Raspberry Pi eller annen maskin</text>
+  <text x="732" y="146" font-size="12" fill="#52606d">Node.js eller Python, ingen pakker å installere</text>
+
+  <!-- tcplink_web.js -->
+  <rect x="736" y="196" width="184" height="244" rx="8" fill="#ffffff" stroke="#3e4c59" stroke-width="1.5"/>
+  <text x="752" y="222" font-size="13" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">tcplink_web.js</text>
+  <text x="752" y="244" font-size="12" fill="#52606d">webserver, port 8090</text>
+  <text x="752" y="262" font-size="12" fill="#52606d">kobler til på nytt hver 3 s</text>
+  <text x="752" y="280" font-size="12" fill="#52606d">kun lesing</text>
+  <rect x="752" y="304" width="152" height="72" rx="6" fill="#f5f7fa" stroke="#9aa5b1" stroke-dasharray="4 3"/>
+  <text x="764" y="326" font-size="11" fill="#7b8794">bruker modulen</text>
+  <text x="764" y="344" font-size="12" font-family="Consolas, Menlo, monospace" fill="#3e4c59">tcplink_client.js</text>
+  <text x="764" y="362" font-size="11" fill="#52606d">dekoder protokollen</text>
+  <text x="752" y="402" font-size="12" fill="#52606d">holder historikken i</text>
+  <text x="752" y="420" font-size="12" fill="#52606d">minnet, PLS-en er fasit</text>
+
+  <!-- nettleser -->
+  <rect x="994" y="196" width="150" height="244" rx="8" fill="#ffffff" stroke="#7b8794"/>
+  <text x="1008" y="222" font-size="13" font-weight="700" fill="#1f2933">Nettleser</text>
+  <text x="1008" y="244" font-size="12" font-family="Consolas, Menlo, monospace" fill="#3e4c59">tcplink_web.html</text>
+  <text x="1008" y="262" font-size="12" fill="#52606d">PC, mobil, panel</text>
+  <text x="1008" y="280" font-size="12" fill="#52606d">flere samtidig</text>
+  <text x="1008" y="320" font-size="12" fill="#52606d">verdier med navn</text>
+  <text x="1008" y="338" font-size="12" fill="#7048e8">historikk-tabell</text>
+
+  <line x1="922" y1="300" x2="992" y2="300" stroke="#1c64c8" stroke-width="1.5" marker-end="url(#a-blue)"/>
+  <text x="957" y="292" font-size="11" fill="#1c64c8" text-anchor="middle">HTTP + SSE</text>
+
+  <!-- terminalklienter -->
+  <rect x="736" y="480" width="184" height="104" rx="8" fill="#ffffff" stroke="#7b8794"/>
+  <text x="752" y="506" font-size="13" font-weight="700" fill="#1f2933">Terminalklienter</text>
+  <text x="752" y="528" font-size="12" font-family="Consolas, Menlo, monospace" fill="#3e4c59">tcplink_client.py</text>
+  <text x="752" y="546" font-size="12" font-family="Consolas, Menlo, monospace" fill="#3e4c59">tcplink_client.js</text>
+  <text x="752" y="566" font-size="11" fill="#52606d">røyktest, samme protokoll</text>
+
+  <!-- gammel bro -->
+  <rect x="994" y="480" width="150" height="104" rx="8" fill="#fafafa" stroke="#9aa5b1" stroke-dasharray="5 4"/>
+  <text x="1008" y="506" font-size="12" font-family="Consolas, Menlo, monospace" fill="#7b8794">kjoreverk_bridge.js</text>
+  <text x="1008" y="528" font-size="12" fill="#7b8794">gammelt format 6</text>
+  <text x="1008" y="546" font-size="12" fill="#7b8794">ikke portet ennå</text>
+
+  <text x="32" y="690" font-size="12" fill="#52606d">Flere klienter mot PLS-en samtidig krever flere TcpLink-instanser, hver med egen connId og localPort.</text>
+</svg>

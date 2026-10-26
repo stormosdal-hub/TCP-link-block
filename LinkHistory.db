@@ -1,0 +1,17 @@
+﻿DATA_BLOCK "LinkHistory"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 0.1
+"TcpLinkHistory"
+
+BEGIN
+   // Historikken. Fylles av TcpLink -- ingen startverdier å sette.
+   //
+   // DENNE DB-EN MÅ VÆRE RETENTIV, ellers er historikken borte etter et
+   // strømbrudd. Den har derfor ikke NON_RETAIN som LinkNames har. Sjekk
+   // etter import: åpne DB-en og se at kolonnen Retain er krysset av. I en
+   // ikke-optimert DB gjelder det hele DB-en på én gang.
+   //
+   // Lastes DB-en ned med reinitialisering (for eksempel etter en endret
+   // UDT), starter historikken på nytt fra post 1. Klientene merker det og
+   // tømmer sin kopi.
+END_DATA_BLOCK

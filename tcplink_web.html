@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TcpLink sanntidsvisning</title>
+<style>
+  :root {
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --text: #1b1f24;
+    --muted: #68717c;
+    --line: #e4e7eb;
+    --on: #2f9e44;
+    --on-glow: rgba(47, 158, 68, 0.18);
+    --off: #cdd2d8;
+    --accent: #1c6dd0;
+    --warn: #c2410c;
+    --bad: #c92a2a;
+    --flash: rgba(28, 109, 208, 0.16);
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101317;
+      --card: #191e24;
+      --text: #e5e8ec;
+      --muted: #8b949e;
+      --line: #29313a;
+      --on: #40c057;
+      --on-glow: rgba(64, 192, 87, 0.22);
+      --off: #3a434d;
+      --accent: #5aa9f5;
+      --warn: #fb923c;
+      --bad: #ff6b6b;
+      --flash: rgba(90, 169, 245, 0.18);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  header {
+    position: sticky; top: 0; z-index: 1;
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 16px;
+  }
+  .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: 0.01em; }
+  .addr { color: var(--muted); font-family: var(--mono); font-size: 13px; }
+  .pill {
+    margin-left: auto;
+    padding: 3px 10px; border-radius: 999px;
+    font-size: 13px; font-weight: 600;
+    background: var(--line); color: var(--muted);
+  }
+  .pill.up { background: var(--on-glow); color: var(--on); }
+  .pill.stale { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+  .pill.down { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 6px 24px; margin-top: 10px; }
+  .stat span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  .stat b { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .bar { display: flex; justify-content: flex-end; padding: 12px 16px 0; max-width: 1400px; margin: 0 auto; }
+  .bar label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 14px; cursor: pointer; }
+
+  main {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: 16px;
+    padding: 12px 16px 16px;
+    max-width: 1400px; margin: 0 auto;
+    align-items: start;
+  }
+  section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px 6px;
+    min-width: 0;
+  }
+  section.wide { grid-column: 1 / -1; }
+  /* De siste kjente verdiene blir stående på skjermen når linken er nede,
+     gråtonet så de ikke kan forveksles med levende verdier. */
+  body.offline main { opacity: 0.45; filter: grayscale(1); }
+  h2 { font-size: 14px; margin: 0; font-weight: 650; }
+  h2 small { font-weight: 400; color: var(--muted); font-family: var(--mono); font-size: 12px; margin-left: 6px; }
+  h3 { font-size: 12px; margin: 12px 0 2px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  h3 small { text-transform: none; letter-spacing: 0; font-weight: 400; font-family: var(--mono); margin-left: 4px; }
+
+  .rows { margin-top: 6px; }
+  .cols { columns: 260px auto; column-gap: 28px; }
+  .row {
+    display: grid;
+    grid-template-columns: 2.4em minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 2px;
+    border-top: 1px solid var(--line);
+    break-inside: avoid;
+  }
+  .idx { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+  .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row.unnamed .name { color: var(--muted); font-family: var(--mono); font-size: 13px; }
+  .val {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    border-radius: 4px;
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+  .val .unit { color: var(--muted); margin-left: 4px; }
+  .val.mono { font-family: var(--mono); font-size: 13px; }
+  .val .ago { display: block; color: var(--muted); font-size: 12px; }
+  .chg { animation: flash 0.9s ease-out; }
+  @keyframes flash { from { background: var(--flash); } to { background: transparent; } }
+
+  .lamp {
+    display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--off); vertical-align: middle;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .row.on .lamp { background: var(--on); box-shadow: 0 0 0 4px var(--on-glow); }
+
+  .empty { color: var(--muted); padding: 8px 0 10px; font-size: 14px; }
+
+  /* historikk */
+  .hsum { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .hsum .warn { color: var(--warn); }
+  .hist { max-height: 440px; overflow-y: auto; }
+  .row.hrow { grid-template-columns: 4.2em minmax(0, 1fr) auto; }
+  .hrow .when { display: block; color: var(--muted); font-family: var(--mono); font-size: 12px; }
+  .hrow.new .val { animation: flash 1.6s ease-out; }
+  footer { color: var(--muted); font-size: 13px; padding: 0 16px 24px; max-width: 1400px; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <h1>TcpLink</h1>
+    <span class="addr" id="addr"></span>
+    <span class="pill" id="pill">Kobler til…</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><span>PLS-klokke</span><b id="clock">–</b></div>
+    <div class="stat"><span>Siste melding</span><b id="age">–</b></div>
+    <div class="stat"><span>Meldinger / s</span><b id="rate">–</b></div>
+    <div class="stat"><span>Sekvens</span><b id="seq">–</b></div>
+    <div class="stat"><span>Hull</span><b id="gaps">–</b></div>
+  </div>
+</header>
+
+<div class="bar">
+  <label><input type="checkbox" id="showAll"> Vis plasser uten navn</label>
+</div>
+
+<main id="main">
+  <section class="wide"><div class="empty">Venter på PLS-en…</div></section>
+</main>
+
+<footer>
+  Navnene kommer fra navne-DB-en i PLS-en. Denne siden er kun for lesing: serveren holder
+  linken i live med kommandorammer som bare inneholder nuller, og setter aldri en kommando.
+</footer>
+
+<script>
+'use strict';
+
+// Ett kort per dataseksjon, i samme rekkefølge som UDT-ene.
+var CARDS = [
+  { sec: 'tx_bits',  title: 'Signaler', sub: 'txDigital.bits',  kind: 'bit',  wide: true },
+  { sec: 'tx_reals', title: 'Reals',    sub: 'txAnalog.reals',  kind: 'real' },
+  { sec: 'tx_ints',  title: 'Ints',     sub: 'txAnalog.ints',   kind: 'num' },
+  { sec: 'tx_dints', title: 'DInts',    sub: 'txAnalog.dints',  kind: 'num' },
+  { sec: 'tx_words', title: 'Words',    sub: 'txDigital.words', kind: 'word' },
+  { sec: 'tx_times', title: 'Tider',    sub: 'txDigital.times', kind: 'time' },
+];
+// Det PLS-en tar imot. Listes opp, sendes ikke: denne siden sender ingen kommandoer.
+var COMMANDS = [
+  { sec: 'rx_bits',  title: 'Bits',  sub: 'rx.bits / rx.pulse' },
+  { sec: 'rx_reals', title: 'Reals', sub: 'rx.reals' },
+  { sec: 'rx_ints',  title: 'Ints',  sub: 'rx.ints' },
+  { sec: 'rx_dints', title: 'DInts', sub: 'rx.dints' },
+  { sec: 'rx_words', title: 'Words', sub: 'rx.words' },
+];
+
+var labels = null, data = null;
+var hist = null, histSeen = 0;        // historikken, og høyeste løpenummer som er vist
+var cells = {};                       // sec -> [ { row, val, text } ]
+var $ = function (id) { return document.getElementById(id); };
+
+// ---- husket visningsvalg; lagring kan være blokkert, siden virker uten
+var showAll = false;
+try { showAll = localStorage.getItem('tcplink.showAll') === '1'; } catch (e) {}
+$('showAll').checked = showAll;
+$('showAll').onchange = function () {
+  showAll = this.checked;
+  try { localStorage.setItem('tcplink.showAll', showAll ? '1' : '0'); } catch (e) {}
+  build();
+};
+
+// ------------------------------------------------------------- formatering
+function pad(n, w) { return String(n).padStart(w || 2, '0'); }
+
+function fmtDTL(t) {
+  if (!t || t[0] < 2000) return null;             // 1970 = aldri satt
+  return t[0] + '-' + pad(t[1]) + '-' + pad(t[2]) + ' ' + pad(t[3]) + ':' + pad(t[4]) + ':' + pad(t[5]);
+}
+
+function dtlMs(t) { return Date.UTC(t[0], t[1] - 1, t[2], t[3], t[4], t[5], t[6]); }
+
+function fmtSpan(ms) {
+  var s = Math.round(Math.abs(ms) / 1000);
+  var txt = s < 60 ? s + ' s' : s < 3600 ? Math.round(s / 60) + ' min'
+          : s < 172800 ? (s / 3600).toFixed(1) + ' t' : Math.round(s / 86400) + ' døgn';
+  return ms < 0 ? txt + ' fram i tid' : txt + ' siden';
+}
+
+function fmtReal(v) {
+  if (!isFinite(v)) return String(v);
+  var a = Math.abs(v);
+  if (a !== 0 && (a >= 1e7 || a < 1e-3)) return v.toExponential(3);
+  return String(+v.toFixed(3));
+}
+
+function fmtWord(v) { return '16#' + v.toString(16).toUpperCase().padStart(4, '0'); }
+
+// ------------------------------------------------------------------ bygging
+function el(tag, cls, text) {
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;   // navn er tekst, aldri HTML
+  return e;
+}
+
+function slots(sec) {
+  var list = (labels && labels[sec]) || [];
+  var out = [];
+  list.forEach(function (l, i) { if (showAll || l.named) out.push({ i: i, l: l }); });
+  return out;
+}
+
+function addRows(parent, sec, kind) {
+  var list = slots(sec);
+  cells[sec] = [];
+  if (!list.length) {
+    parent.appendChild(el('div', 'empty', showAll ? 'Ingen plasser.' : 'Ingen plasser med navn.'));
+    return;
+  }
+  list.forEach(function (s) {
+    var row = el('div', 'row' + (s.l.named ? '' : ' unnamed'));
+    row.appendChild(el('span', 'idx', String(s.i)));
+    var name = el('span', 'name', s.l.name);
+    name.title = s.l.name;
+    row.appendChild(name);
+    var val = el('span', 'val' + (kind === 'word' ? ' mono' : ''));
+    if (kind === 'bit') val.appendChild(el('span', 'lamp'));
+    else if (kind === 'cmd') { if (s.l.unit) val.appendChild(el('span', 'unit', s.l.unit)); }
+    else val.textContent = '–';
+    row.appendChild(val);
+    parent.appendChild(row);
+    cells[sec][s.i] = { row: row, val: val, unit: s.l.unit, text: null };
+  });
+}
+
+function build() {
+  var main = $('main');
+  main.textContent = '';
+  cells = {};
+  if (!labels) {
+    var w = el('section', 'wide');
+    w.appendChild(el('div', 'empty', 'Venter på PLS-en…'));
+    main.appendChild(w);
+    return;
+  }
+
+  CARDS.forEach(function (c) {
+    var s = el('section', c.wide ? 'wide' : '');
+    var h = el('h2', '', c.title);
+    h.appendChild(el('small', '', c.sub));
+    s.appendChild(h);
+    var rows = el('div', 'rows' + (c.wide ? ' cols' : ''));
+    addRows(rows, c.sec, c.kind);
+    s.appendChild(rows);
+    main.appendChild(s);
+  });
+
+  var hs = el('section', 'wide');
+  var hh = el('h2', '', 'Historikk');
+  hh.appendChild(el('small', '', 'fra PLS-ens retentive minne'));
+  hs.appendChild(hh);
+  var sum = el('div', 'hsum');
+  sum.id = 'hsum';
+  hs.appendChild(sum);
+  var list = el('div', 'rows hist');
+  list.id = 'hlist';
+  hs.appendChild(list);
+  main.appendChild(hs);
+  renderHistory(true);
+
+  var cmd = el('section', 'wide');
+  var h = el('h2', '', 'Kommandoer PLS-en tar imot');
+  h.appendChild(el('small', '', 'PC → PLS, sendes ikke herfra'));
+  cmd.appendChild(h);
+  COMMANDS.forEach(function (c) {
+    if (!slots(c.sec).length) return;
+    var h3 = el('h3', '', c.title + ' ');
+    h3.appendChild(el('small', '', c.sub));
+    cmd.appendChild(h3);
+    var rows = el('div', 'rows cols');
+    addRows(rows, c.sec, 'cmd');
+    cmd.appendChild(rows);
+  });
+  if (!COMMANDS.some(function (c) { return slots(c.sec).length; })) {
+    cmd.appendChild(el('div', 'empty', 'Ingen kommandoer med navn.'));
+  }
+  main.appendChild(cmd);
+
+  if (data) apply(true);
+}
+
+// ------------------------------------------------------------------ verdier
+function setText(cell, text, ago, quiet) {
+  var key = text + '|' + (ago || '');
+  if (cell.text === key) return;
+  var changed = cell.text !== null && cell.text.split('|')[0] !== text;
+  cell.text = key;
+  cell.val.textContent = text;
+  if (cell.unit) cell.val.appendChild(el('span', 'unit', cell.unit));
+  if (ago) cell.val.appendChild(el('span', 'ago', ago));
+  if (changed && !quiet) flash(cell.val);
+}
+
+function flash(node) {
+  node.classList.remove('chg');
+  void node.offsetWidth;              // start animasjonen på nytt
+  node.classList.add('chg');
+}
+
+function apply(quiet) {
+  CARDS.forEach(function (c) {
+    var values = data[c.sec.slice(3)] || [];
+    (cells[c.sec] || []).forEach(function (cell, i) {
+      if (!cell) return;
+      var v = values[i];
+      if (v === undefined) return;
+      if (c.kind === 'bit') {
+        var was = cell.row.classList.contains('on');
+        cell.row.classList.toggle('on', v);
+        if (was !== v && cell.text !== null && !quiet) flash(cell.val);
+        cell.text = String(v);
+      } else if (c.kind === 'time') {
+        var txt = fmtDTL(v);
+        var ago = txt && data.tsValid ? fmtSpan(dtlMs(data.ts) - dtlMs(v)) : '';
+        setText(cell, txt || 'aldri', ago, quiet);
+      } else if (c.kind === 'word') {
+        setText(cell, fmtWord(v), '', quiet);
+      } else if (c.kind === 'real') {
+        setText(cell, fmtReal(v), '', quiet);
+      } else {
+        setText(cell, String(v), '', quiet);
+      }
+    });
+  });
+
+  var clock = fmtDTL(data.ts);
+  $('clock').textContent = clock ? clock + (data.localTime ? ' lokal' : ' UTC') : 'ikke stilt';
+  $('seq').textContent = data.seq;
+}
+
+// ---------------------------------------------------------------- historikk
+// Navnet på plassen posten gjelder: section 0 = txDigital.bits, 1 = words.
+function histName(rec) {
+  var sec = rec.section === 0 ? 'tx_bits' : 'tx_words';
+  var l = labels && labels[sec] && labels[sec][rec.index];
+  return l ? l.name : sec.slice(3) + '[' + rec.index + ']';
+}
+
+function renderHistory(quiet) {
+  var sum = $('hsum'), list = $('hlist');
+  if (!sum || !list) return;
+  list.textContent = '';
+
+  if (!hist || !hist.known) {
+    sum.textContent = 'Venter på historikk fra PLS-en…';
+    return;
+  }
+  var n = hist.records.length;
+  sum.textContent = n + ' hendelser · ' + hist.capacity + ' plasser · nyeste #' + hist.newest +
+                    (hist.localTime ? ' · lokal tid' : ' · UTC');
+  if (hist.lost > 0) {
+    sum.appendChild(el('span', 'warn', ' · ' + hist.lost + ' eldre er overskrevet'));
+  }
+  if (!n) {
+    list.appendChild(el('div', 'empty', 'Ingen hendelser logget. Velg hva som logges med histMask i PLS-en.'));
+    return;
+  }
+
+  hist.records.forEach(function (rec) {
+    var isBit = rec.section === 0;
+    var fresh = !quiet && histSeen && rec.recNo > histSeen;
+    var row = el('div', 'row hrow' + (isBit && rec.value ? ' on' : '') + (fresh ? ' new' : ''));
+    row.appendChild(el('span', 'idx', '#' + rec.recNo));
+    var name = el('span', 'name', histName(rec));
+    name.title = histName(rec);
+    name.appendChild(el('span', 'when', (fmtDTL(rec.ts) || 'ukjent tid') + '.' + pad(rec.ts[6], 3)));
+    row.appendChild(name);
+    var val = el('span', 'val' + (isBit ? '' : ' mono'));
+    if (isBit) {
+      val.appendChild(el('span', 'lamp'));
+      val.appendChild(el('span', 'unit', rec.value ? 'på' : 'av'));
+    } else {
+      val.textContent = fmtWord(rec.value);
+    }
+    row.appendChild(val);
+    list.appendChild(row);
+  });
+  histSeen = Math.max(histSeen, hist.newest);
+}
+
+// ------------------------------------------------------------------ status
+function showStatus(s) {
+  $('addr').textContent = s.host + ':' + s.port;
+  document.body.classList.toggle('offline', s.state !== 'up');
+  var pill = $('pill');
+  pill.className = 'pill ' + s.state;
+  pill.textContent = s.state === 'up' ? 'Tilkoblet'
+                   : s.state === 'stale' ? 'Ingen meldinger'
+                   : s.state === 'down' ? 'Nede: ' + s.why
+                   : 'Kobler til…';
+  $('rate').textContent = s.rate;
+  $('gaps').textContent = s.gaps;
+  $('age').textContent = s.ageMs === null ? '–' : (s.ageMs / 1000).toFixed(1) + ' s siden';
+}
+
+// ------------------------------------------------------------------ hendelser
+var es = new EventSource('events');
+es.addEventListener('status', function (e) { showStatus(JSON.parse(e.data)); });
+es.addEventListener('labels', function (e) { labels = JSON.parse(e.data); build(); });
+es.addEventListener('history', function (e) { hist = JSON.parse(e.data); renderHistory(false); });
+es.addEventListener('data', function (e) {
+  var first = !data;
+  data = JSON.parse(e.data);
+  if (labels) apply(first);
+});
+es.onerror = function () {
+  document.body.classList.add('offline');
+  var pill = $('pill');
+  pill.className = 'pill down';
+  pill.textContent = 'Får ikke kontakt med webserveren';
+};
+
+build();
+</script>
+</body>
+</html>

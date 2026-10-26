@@ -1,0 +1,61 @@
+﻿TYPE "TcpLinkNames"
+VERSION : 1.0
+   STRUCT
+      // Hva hver plass HETER, for klienten. TcpLink sender dette til hver
+      // klient én gang, rett etter at den har koblet til, og igjen på en
+      // stigende flanke på resendNames -- aldri sammen med dataene.
+      //
+      // Lag ÉN ikke-optimert global DB av denne typen (se LinkNames.db) og
+      // koble den til 'names' på TcpLink. Den sendes som referanse, så
+      // navnene finnes bare én gang i minnet, og TcpLink sender rett fra
+      // DB-en din.
+      //
+      // Indeks i her gir navn til indeks i i den tilhørende dataarrayen:
+      //   txBits[3]   navngir  txDigital.bits[3]
+      //   txReals[0]  navngir  txAnalog.reals[0]
+      //   rxBits[2]   navngir  rx.bits[2] OG rx.pulse[2]
+      //
+      // En tom streng lar plassen være uten navn; klienten viser indeksen
+      // i stedet. En enhet kan følge med i navnet: 'Hastighet [rpm]'.
+      //
+      // STØRRELSER -- endre fritt, ingenting annet å endre:
+      //   * en array kan være KORTERE enn dataarrayen sin: gi navn bare til
+      //     de første n plassene og spar minnet. Lengre setter namesStatus 1.
+      //   * minst 1 element, høyst 255, starter alltid på 0
+      //   * en hvilken som helst strenglengde som er et PARTALL. Hver array
+      //     kan ha sin egen.
+      // REKKEFØLGEN på arrayene betyr noe: den er rekkefølgen på linjen.
+      //
+      // MINNE: hvert navn koster sin deklarerte lengde + 2 byte arbeidsminne,
+      // én gang. Standardstørrelsene gir 116 x 22 = 2552 byte, pluss 32 for
+      // hdr. Én melding må holde seg innenfor 8192 byte, omtrent 370 navn på
+      // 20 tegn.
+
+      // Fylles ut av TcpLink rett før hver sending. La den være i fred.
+      hdr : Struct
+         magic  : Byte;
+         ver    : Byte;
+         len    : UInt;
+         seq    : UInt;
+         flags  : Byte;
+         kind   : Byte;
+         layout : Array[0..11] of Byte;
+         spare  : Array[0..11] of Byte;
+      END_STRUCT;
+
+      // ---- PLS -> PC, "TcpLinkTxDigital" ----
+      txBits  : Array[0..31] of String[20];
+      txWords : Array[0..7] of String[20];
+      txTimes : Array[0..3] of String[20];
+      // ---- PLS -> PC, "TcpLinkTxAnalog" ----
+      txInts  : Array[0..15] of String[20];
+      txDints : Array[0..7] of String[20];
+      txReals : Array[0..7] of String[20];
+      // ---- PC -> PLS, "TcpLinkRx" ----
+      rxBits  : Array[0..15] of String[20];
+      rxWords : Array[0..3] of String[20];
+      rxInts  : Array[0..11] of String[20];
+      rxDints : Array[0..3] of String[20];
+      rxReals : Array[0..3] of String[20];
+   END_STRUCT;
+END_TYPE

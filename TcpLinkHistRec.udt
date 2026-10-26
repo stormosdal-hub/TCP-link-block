@@ -1,0 +1,15 @@
+﻿TYPE "TcpLinkHistRec"
+VERSION : 1.0
+   STRUCT
+      // Én hendelse i historikken: en bit eller et word i txDigital som
+      // endret seg. 20 byte, i nøyaktig samme form i PLS-en og på linjen.
+      //
+      // Ikke endre denne typen: klientene leser postene byte for byte.
+
+      recNo   : UDInt;   // løpenummer 1, 2, 3 ... nullstilles aldri. 0 = tom plass
+      ts      : DTL;     // PLS-klokka da endringen ble sett
+      section : Byte;    // 0 = txDigital.bits, 1 = txDigital.words
+      index   : Byte;    // plassen i den arrayen
+      value   : Word;    // ny verdi: 0 eller 1 for en bit, hele wordet for et word
+   END_STRUCT;
+END_TYPE

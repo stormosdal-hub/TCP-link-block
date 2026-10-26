@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" width="1200" height="760" role="img" aria-label="Forbindelsen: tilstandsmaskinen IDLE, CONNECTING, CONNECTED, DISCONNECTING, der alle veier tilbake går gjennom DISCONNECTING. Etter tilkobling sender PLS-en navnene, så et fullt øyeblikksbilde, så hele historikken, og klienten svarer med sin første kommandoramme." font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
+  <title>TcpLink – forbindelsen</title>
+  <desc>Venstre: tilstandsmaskinen i TcpLink. Høyre: rekkefølgen på meldingene etter at en klient har koblet til, mens linken er oppe, og når klienten blir stille eller forsvinner.</desc>
+  <defs>
+    <marker id="a-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3e4c59"/></marker>
+    <marker id="a-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1c64c8"/></marker>
+    <marker id="a-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2b8a3e"/></marker>
+    <marker id="a-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/></marker>
+    <marker id="a-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7048e8"/></marker>
+  </defs>
+
+  <rect width="1200" height="760" fill="#ffffff"/>
+
+  <text x="32" y="44" font-size="22" font-weight="700" fill="#1f2933">Forbindelsen – tilstander og rekkefølge</text>
+  <text x="32" y="70" font-size="13" fill="#52606d">Alle veier tilbake til en ny forbindelse går gjennom DISCONNECTING. Etter tilkobling: navn, så et fullt øyeblikksbilde, så historikken.</text>
+
+  <!-- ================= tilstandsmaskin ================= -->
+  <text x="40" y="112" font-size="14" font-weight="700" fill="#1f2933">Tilstandsmaskin</text>
+  <text x="158" y="112" font-size="12" font-family="Consolas, Menlo, monospace" fill="#7b8794">linkState</text>
+
+  <rect x="40" y="150" width="200" height="72" rx="10" fill="#ffffff" stroke="#7b8794" stroke-width="1.2"/>
+  <text x="56" y="178" font-size="13" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">0 · IDLE</text>
+  <text x="56" y="200" font-size="12" fill="#52606d">venter ut reconnectDelay</text>
+
+  <rect x="360" y="150" width="200" height="72" rx="10" fill="#ffffff" stroke="#7b8794" stroke-width="1.2"/>
+  <text x="376" y="178" font-size="13" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">1 · CONNECTING</text>
+  <text x="376" y="200" font-size="12" fill="#52606d">TCON lytter på porten</text>
+
+  <rect x="360" y="410" width="200" height="72" rx="10" fill="#eef4fb" stroke="#9db4cf" stroke-width="1.2"/>
+  <text x="376" y="438" font-size="13" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">2 · CONNECTED</text>
+  <text x="376" y="460" font-size="12" fill="#52606d">sender og mottar</text>
+
+  <rect x="40" y="410" width="200" height="72" rx="10" fill="#ffffff" stroke="#3e4c59" stroke-width="2.5"/>
+  <text x="56" y="438" font-size="13" font-weight="700" font-family="Consolas, Menlo, monospace" fill="#1f2933">3 · DISCONNECTING</text>
+  <text x="56" y="460" font-size="12" fill="#52606d">TDISCON frigir ressursen</text>
+
+  <g stroke="#3e4c59" stroke-width="1.5" fill="none">
+    <line x1="242" y1="186" x2="358" y2="186" marker-end="url(#a-ink)"/>
+    <line x1="460" y1="224" x2="460" y2="408" marker-end="url(#a-ink)"/>
+    <line x1="358" y1="446" x2="242" y2="446" marker-end="url(#a-ink)"/>
+    <line x1="140" y1="408" x2="140" y2="224" marker-end="url(#a-ink)"/>
+    <line x1="380" y1="224" x2="238" y2="406" marker-end="url(#a-ink)"/>
+  </g>
+
+  <g font-size="11" text-anchor="middle" fill="#52606d">
+    <text x="300" y="162">enable og</text>
+    <text x="300" y="176">ventetid ute</text>
+    <text x="300" y="470">TSEND/TRCV-feil,</text>
+    <text x="300" y="484">dårlig ramme</text>
+    <text x="300" y="498">eller enable av</text>
+  </g>
+  <text x="472" y="296" font-size="11" font-weight="700" fill="#1f2933">TCON DONE</text>
+  <text x="472" y="312" font-size="11" fill="#52606d">klienten har</text>
+  <text x="472" y="326" font-size="11" fill="#52606d">koblet til</text>
+  <text x="152" y="296" font-size="11" font-weight="700" fill="#1f2933">TDISCON</text>
+  <text x="152" y="312" font-size="11" fill="#52606d">ferdig</text>
+  <text x="332" y="300" font-size="11" font-weight="700" fill="#1f2933">TCON ERROR</text>
+  <text x="332" y="314" font-size="11" fill="#52606d">eller enable av</text>
+
+  <text x="40" y="560" font-size="12" font-weight="700" fill="#1f2933">Alle veier tilbake går gjennom DISCONNECTING.</text>
+  <text x="40" y="578" font-size="12" fill="#52606d">TCON bestilles aldri mens TDISCON er opptatt,</text>
+  <text x="40" y="596" font-size="12" fill="#52606d">og nye forsøk gjentas på en timer, ikke på én flanke.</text>
+  <text x="40" y="622" font-size="12" fill="#52606d">Utgangen linkState på blokken viser tilstanden.</text>
+
+  <!-- ================= rekkefølge ================= -->
+  <text x="640" y="112" font-size="14" font-weight="700" fill="#1f2933">Etter tilkobling</text>
+
+  <rect x="650" y="132" width="140" height="36" rx="6" fill="#eef4fb" stroke="#9db4cf"/>
+  <text x="720" y="155" font-size="12" font-weight="700" fill="#1f2933" text-anchor="middle">PLS · TcpLink</text>
+  <rect x="1010" y="132" width="140" height="36" rx="6" fill="#f7f3ec" stroke="#cdbf9f"/>
+  <text x="1080" y="155" font-size="12" font-weight="700" fill="#1f2933" text-anchor="middle">Klient</text>
+
+  <g stroke="#9aa5b1" stroke-dasharray="4 4">
+    <line x1="720" y1="168" x2="720" y2="730"/>
+    <line x1="1080" y1="168" x2="1080" y2="730"/>
+  </g>
+
+  <line x1="1080" y1="205" x2="722" y2="205" stroke="#3e4c59" stroke-width="1.5" marker-end="url(#a-ink)"/>
+  <text x="900" y="197" font-size="12" fill="#1f2933" text-anchor="middle">kobler til (TCP)</text>
+
+  <line x1="720" y1="245" x2="1078" y2="245" stroke="#2b8a3e" stroke-width="2" marker-end="url(#a-green)"/>
+  <text x="900" y="237" font-size="12" font-weight="700" fill="#2b8a3e" text-anchor="middle">navn · kind 1 · én gang</text>
+
+  <line x1="720" y1="285" x2="1078" y2="285" stroke="#1c64c8" stroke-width="2" marker-end="url(#a-blue)"/>
+  <text x="900" y="277" font-size="12" font-weight="700" fill="#1c64c8" text-anchor="middle">data · fullt øyeblikksbilde</text>
+
+  <line x1="720" y1="325" x2="1078" y2="325" stroke="#7048e8" stroke-width="2" marker-end="url(#a-purple)"/>
+  <line x1="720" y1="331" x2="1078" y2="331" stroke="#7048e8" stroke-width="1" stroke-opacity="0.45"/>
+  <line x1="720" y1="337" x2="1078" y2="337" stroke="#7048e8" stroke-width="1" stroke-opacity="0.25"/>
+  <text x="900" y="317" font-size="12" font-weight="700" fill="#7048e8" text-anchor="middle">historikk · kind 2 · hele bufferen</text>
+  <text x="900" y="353" font-size="11" fill="#52606d" text-anchor="middle">eldste post først, 16 per melding, i ledige sendeplasser</text>
+
+  <line x1="1080" y1="385" x2="722" y2="385" stroke="#c2410c" stroke-width="2" marker-end="url(#a-orange)"/>
+  <text x="900" y="377" font-size="12" font-weight="700" fill="#c2410c" text-anchor="middle">første kommandoramme</text>
+  <text x="900" y="401" font-size="11" fill="#52606d" text-anchor="middle">størrelse fra layout i datameldingen</text>
+
+  <rect x="680" y="420" width="440" height="198" rx="4" fill="none" stroke="#9aa5b1" stroke-dasharray="5 4"/>
+  <rect x="680" y="420" width="150" height="20" fill="#f0f2f5" stroke="#9aa5b1"/>
+  <text x="688" y="434" font-size="11" fill="#3e4c59">så lenge linken er oppe</text>
+
+  <line x1="720" y1="462" x2="1078" y2="462" stroke="#1c64c8" stroke-width="2" marker-end="url(#a-blue)"/>
+  <text x="900" y="454" font-size="12" font-weight="700" fill="#1c64c8" text-anchor="middle">data ved endring</text>
+
+  <line x1="720" y1="496" x2="1078" y2="496" stroke="#1c64c8" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a-blue)"/>
+  <text x="900" y="488" font-size="12" fill="#1c64c8" text-anchor="middle">heartbeat etter 1 s stillhet</text>
+
+  <line x1="720" y1="530" x2="1078" y2="530" stroke="#7048e8" stroke-width="2" marker-end="url(#a-purple)"/>
+  <text x="900" y="522" font-size="12" fill="#7048e8" text-anchor="middle">ny hendelse logget → historikk</text>
+
+  <line x1="1080" y1="564" x2="722" y2="564" stroke="#c2410c" stroke-width="2" marker-end="url(#a-orange)"/>
+  <text x="900" y="556" font-size="12" font-weight="700" fill="#c2410c" text-anchor="middle">kommandoer hvert 500. ms</text>
+
+  <line x1="720" y1="598" x2="1078" y2="598" stroke="#2b8a3e" stroke-width="2" marker-end="url(#a-green)"/>
+  <text x="900" y="590" font-size="12" fill="#2b8a3e" text-anchor="middle">navn på nytt ved flanke på resendNames</text>
+
+  <rect x="660" y="636" width="380" height="40" rx="4" fill="#fff8e6" stroke="#e0c27a"/>
+  <text x="672" y="654" font-size="12" fill="#1f2933">Klienten stille lenger enn rxTimeout (2 s):</text>
+  <text x="672" y="670" font-size="12" fill="#52606d">rx nullstilles, og rxStale blir TRUE</text>
+
+  <rect x="660" y="688" width="440" height="40" rx="4" fill="#fff8e6" stroke="#e0c27a"/>
+  <text x="672" y="706" font-size="12" fill="#1f2933">Klienten borte: TSEND feiler innen ett heartbeat</text>
+  <text x="672" y="722" font-size="12" fill="#52606d">→ DISCONNECTING → IDLE → lytter igjen. Historikken logges videre.</text>
+</svg>

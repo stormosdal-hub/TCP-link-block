@@ -1,0 +1,88 @@
+﻿FUNCTION "TcpLinkDiagLeds" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 1.0
+
+// ---------------------------------------------------------------------
+// Leser ERROR- og MAINT-dioden på CPU-en inn i "LinkDiag". Kalles hver
+// syklus i OB1, før tilordningen til txDigital:
+//
+//     "TcpLinkDiagLeds"(cpu := "Local~Common");
+//
+// "Local~Common" er systemkonstanten for CPU-en selv; velg den fra listen
+// hvis TIA foreslår et annet navn. Feil hardware-ID gir et negativt svar,
+// som vises som en LED-feilkode i klienten.
+//
+// LED-instruksjonen: diode 2 = ERROR, 3 = MAINT. Svaret er 1 = av,
+// 2/3 = lyser, 4/5 = blinker, 6 = blinker vekselvis, 9 = ikke tilgjengelig.
+// ---------------------------------------------------------------------
+
+VAR_INPUT
+   cpu : HW_IO;                     // CPU-ens hardware-ID: "Local~Common"
+END_VAR
+
+VAR_TEMP
+   ret : Int;
+END_VAR
+
+#ret := LED(LADDR := #cpu, LED := 2);
+"LinkDiag".errorLedState := INT_TO_WORD(#ret);
+"LinkDiag".errorLed := (#ret >= 2) AND (#ret <= 6);
+
+#ret := LED(LADDR := #cpu, LED := 3);
+"LinkDiag".maintLedState := INT_TO_WORD(#ret);
+"LinkDiag".maintLed := (#ret >= 2) AND (#ret <= 6);
+
+END_FUNCTION
+
+
+FUNCTION "TcpLinkDiagOb82" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 1.0
+
+// ---------------------------------------------------------------------
+// Tar vare på en diagnosealarm. Kalles fra OB82 (Diagnostic error
+// interrupt), med startinformasjonen til OB-en:
+//
+//     "TcpLinkDiagOb82"(ioState := #IO_state, hwId := #LADDR,
+//                       channel := #Channel, multiError := #MultiError);
+//
+// OB82 kalles både når en feil kommer og når den går, så telleren øker
+// for begge. IO-statusen sier hvilken av dem det var.
+// ---------------------------------------------------------------------
+
+VAR_INPUT
+   ioState : Word;
+   hwId : HW_ANY;
+   channel : UInt;
+   multiError : Bool;
+END_VAR
+
+"LinkDiag".diagCount := "LinkDiag".diagCount + 1;
+"LinkDiag".diagHwId := #hwId;
+"LinkDiag".diagChannel := #channel;
+"LinkDiag".diagIoState := #ioState;
+"LinkDiag".diagMulti := #multiError;
+
+END_FUNCTION
+
+
+FUNCTION "TcpLinkDiagOb80" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 1.0
+
+// ---------------------------------------------------------------------
+// Tar vare på en tidsfeil. Kalles fra OB80 (Time error interrupt):
+//
+//     "TcpLinkDiagOb80"(faultId := #fault_id);
+//
+// 16#01 = syklustiden er overskredet. Hold OB80 kort: bare dette kallet.
+// ---------------------------------------------------------------------
+
+VAR_INPUT
+   faultId : Byte;
+END_VAR
+
+"LinkDiag".timeErrCount := "LinkDiag".timeErrCount + 1;
+"LinkDiag".timeErrId := BYTE_TO_WORD(#faultId);
+
+END_FUNCTION

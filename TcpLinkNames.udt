@@ -1,5 +1,5 @@
 ﻿TYPE "TcpLinkNames"
-VERSION : 1.0
+VERSION : 1.1
    STRUCT
       // Hva hver plass HETER, for klienten. TcpLink sender dette til hver
       // klient én gang, rett etter at den har koblet til, og igjen på en
@@ -27,7 +27,7 @@ VERSION : 1.0
       // REKKEFØLGEN på arrayene betyr noe: den er rekkefølgen på linjen.
       //
       // MINNE: hvert navn koster sin deklarerte lengde + 2 byte arbeidsminne,
-      // én gang. Standardstørrelsene gir 116 x 22 = 2552 byte, pluss 32 for
+      // én gang. Standardstørrelsene gir 124 x 22 = 2728 byte, pluss 32 for
       // hdr. Én melding må holde seg innenfor 8192 byte, omtrent 370 navn på
       // 20 tegn.
 
@@ -45,7 +45,7 @@ VERSION : 1.0
 
       // ---- PLS -> PC, "TcpLinkTxDigital" ----
       txBits  : Array[0..31] of String[20];
-      txWords : Array[0..7] of String[20];
+      txWords : Array[0..15] of String[20];
       txTimes : Array[0..3] of String[20];
       // ---- PLS -> PC, "TcpLinkTxAnalog" ----
       txInts  : Array[0..15] of String[20];

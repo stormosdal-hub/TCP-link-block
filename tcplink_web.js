@@ -20,6 +20,16 @@
  * beholder bare poster PLS-en fortsatt har, så etter en omstart av Pi-en er
  * alt tilbake så snart linken er oppe.
  *
+ * DIAGNOSEBUFFER. Serveren henter diagnosebufferen fra PLS-ens web-server
+ * (tcplink_diagbuf.js) ved oppstart, når linken kommer opp eller faller,
+ * når et signal med {led}, {ob80} eller {alarm} i navnet endrer seg, og
+ * når noen trykker Oppdater på siden. Oppføringene lagres i
+ * diagbuffer.json ved siden av denne filen, så de overlever en omstart.
+ *
+ *     DIAG_HOST=10.0.123.52   web-serveren å hente fra (standard: PLS-en over)
+ *     DIAG_HOST=av            ingen diagnosebuffer
+ *     DIAG_FILE=/sti/fil.json et annet sted å lagre den
+ *
  * KUN LESING. Den viser det PLS-en sender og lister kommandoene PLS-en tar
  * imot, og den holder linken i live med kommandorammer som bare inneholder
  * nuller. Den setter aldri en kommando. PLS-en tar imot én klient per
@@ -33,11 +43,14 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const link = require('./tcplink_client');
+const diagbuf = require('./tcplink_diagbuf');
 
 const PLC_HOST = process.argv[2] || '10.0.123.52';
 const PLC_PORT = Number(process.argv[3] || 2000);
 const HTTP_PORT = Number(process.argv[4] || 8090);   // 8080 brukes av kjøreverk-broen
 const PAGE = path.join(__dirname, 'tcplink_web.html');
+const DIAG_HOST = process.env.DIAG_HOST || PLC_HOST;
+const DIAG_FILE = process.env.DIAG_FILE || path.join(__dirname, 'diagbuffer.json');
 
 const KEEPALIVE = 500;      // ms mellom kommandorammer, godt under rxTimeout
 const RECONNECT = 3000;     // ms før neste forsøk etter at linken har falt ut
@@ -71,6 +84,7 @@ function connect() {
     plc.lastAt = Date.now();
     setState('up', '');
     console.log('[pls] tilkoblet ' + PLC_HOST + ':' + PLC_PORT);
+    diagSoon('linken kom opp', 1000);
   });
   sock.on('data', onData);
 
@@ -81,6 +95,9 @@ function connect() {
     if (plc.sock === sock) plc.sock = null;
     sock.destroy();
     console.log('[pls] linken er nede: ' + why + ', prøver igjen om ' + RECONNECT / 1000 + ' s');
+    // Faller en link som var oppe, kan CPU-en ha gått i STOP: diagnosebufferen
+    // sier hvorfor. Mislykkede forsøk på å koble til igjen henter ingenting.
+    if (plc.state === 'up' || plc.state === 'stale') diagSoon('linken falt', 2000);
     setState('down', why);
     setTimeout(connect, RECONNECT);
   };
@@ -118,11 +135,17 @@ function onData(chunk) {
     const d = link.decodeUplink(r.frame);
     plc.recent.push(plc.lastAt);
 
+    const changed = plc.data && diagSignalChanged(plc.data, d);
+    if (changed) diagSoon('endring i «' + changed + '»', 1500);
+
     plc.rxLayout = d.rxLayout;
     plc.data = {
       seq: d.seq, ts: d.ts, tsValid: d.tsValid, localTime: d.localTime,
       bits: d.bits, words: d.words, times: d.times,
       ints: d.ints, dints: d.dints, reals: d.reals,
+      // words som tekst etter {format} i navnet, så siden ikke trenger
+      // sin egen kopi av tabellene i tcplink_client.js
+      wordsText: d.words.map((v, i) => link.formatWord(v, link.nameAndUnit(plc.names, 'tx_words', i).fmt)),
     };
     pushLabels();                     // går bare ut når størrelsene har endret seg
     broadcast('data', plc.data);
@@ -156,9 +179,50 @@ function history() {
   return {
     known: hs.known, newest: hs.newest, oldest: hs.oldest, capacity: hs.capacity,
     clearedTo: hs.clearedTo, lost, localTime: hs.localTime,
-    records: [...hs.records.values()].sort((a, b) => b.recNo - a.recNo),   // nyeste først
+    records: [...hs.records.values()]
+      .sort((a, b) => b.recNo - a.recNo)                                   // nyeste først
+      .map((r) => (r.section === 1
+        ? Object.assign({}, r, { valueText: link.formatWord(r.value, link.nameAndUnit(plc.names, 'tx_words', r.index).fmt) })
+        : r)),
   };
 }
+
+// ======================================================== diagnosebufferen
+const diag = DIAG_HOST === 'av' ? null : diagbuf.createDiagBuffer({
+  host: DIAG_HOST, file: DIAG_FILE,
+  // Under en henting kommer det mange endringer tett; nettleserne får ett
+  // samlet bilde i stedet for ett per lang tekst.
+  onChange: () => {
+    if (diag && !diagBroadcast) {
+      diagBroadcast = setTimeout(() => { diagBroadcast = null; broadcast('diag', diag.snapshot()); }, 250);
+    }
+  },
+});
+let diagBroadcast = null, diagTimer = null;
+
+// Hent om litt. Flere grunner tett etter hverandre gir én henting: når
+// ERROR-dioden begynner å blinke, endres gjerne flere signaler samtidig,
+// og oppføringen havner i bufferen et øyeblikk etter signalet.
+function diagSoon(reason, ms) {
+  if (!diag || diagTimer) return;
+  diagTimer = setTimeout(() => { diagTimer = null; diag.refresh(reason); }, ms);
+}
+
+// Navnet på det første diagnosesignalet som er endret siden forrige
+// datamelding, eller null: words med {led} eller {ob80}, bits med {alarm}.
+function diagSignalChanged(a, b) {
+  for (let i = 0; i < b.words.length; i++) {
+    const n = link.nameAndUnit(plc.names, 'tx_words', i);
+    if ((n.fmt === 'led' || n.fmt === 'ob80') && a.words[i] !== b.words[i]) return n.name;
+  }
+  for (let i = 0; i < b.bits.length; i++) {
+    const n = link.nameAndUnit(plc.names, 'tx_bits', i);
+    if (n.fmt === 'alarm' && a.bits[i] !== b.bits[i]) return n.name;
+  }
+  return null;
+}
+
+if (diag) diag.refresh('serveren startet');
 
 // Hold linken i live: kommandoer med bare nuller, i størrelsen PLS-en ba om.
 setInterval(() => {
@@ -208,7 +272,7 @@ function labels() {
     out[sec] = [];
     for (let i = 0; i < counts[sec]; i++) {
       const nu = link.nameAndUnit(plc.names, sec, i);
-      out[sec].push({ name: nu.name, unit: nu.unit, named: !!got[i] });
+      out[sec].push({ name: nu.name, unit: nu.unit, fmt: nu.fmt, named: !!got[i] });
     }
   }
   return out;
@@ -269,14 +333,30 @@ http.createServer((req, res) => {
     if (l) send(res, 'labels', l);
     if (plc.data) send(res, 'data', plc.data);
     if (plc.hist.known) send(res, 'history', history());
+    send(res, 'diag', diag ? diag.snapshot() : { off: true });
     req.on('close', () => clients.delete(res));
+    return;
+  }
+
+  // Oppdater-knappen. Ber bare serveren hente diagnosebufferen på nytt;
+  // ingenting sendes til PLS-programmet.
+  if (url === '/diag/refresh' && req.method === 'POST') {
+    if (!diag) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('diagnosebufferen er slått av (DIAG_HOST=av)\n');
+      return;
+    }
+    diag.refresh('Oppdater-knappen');
+    res.writeHead(202, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('henter\n');
     return;
   }
 
   res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
   res.end('finnes ikke\n');
 }).listen(HTTP_PORT, () => {
-  console.log('[web] http://localhost:' + HTTP_PORT + '  (PLS ' + PLC_HOST + ':' + PLC_PORT + ')');
+  console.log('[web] http://localhost:' + HTTP_PORT + '  (PLS ' + PLC_HOST + ':' + PLC_PORT +
+              (diag ? ', diagnosebuffer fra ' + DIAG_HOST : '') + ')');
 });
 
 connect();

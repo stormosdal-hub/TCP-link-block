@@ -1,5 +1,5 @@
 ﻿TYPE "TcpLinkTxDigital"
-VERSION : 1.1
+VERSION : 1.2
    STRUCT
       // Digitale data, PLS -> PC. HENDELSER: sendes i det øyeblikket de
       // endres -- ingen dødbånd, ingen tidsgrense.
@@ -17,7 +17,7 @@ VERSION : 1.1
       // avhenger av dem.
 
       bits  : Array[0..31] of Bool;   // tilstander, alarmer, endebrytere
-      words : Array[0..7] of Word;    // statusord, feilkoder, bitmasker
+      words : Array[0..15] of Word;   // statusord, feilkoder, bitmasker
 
       // Tidsstempler som PC-en kan regne med: siste feil, siste start,
       // siste gang noe beveget seg. Bruk samme klokke som tidsstempelet i

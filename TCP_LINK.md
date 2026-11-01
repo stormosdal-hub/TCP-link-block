@@ -17,6 +17,8 @@ virker på samme måte. Det som er endret, er dataene:
 | fast layout, klienten må tilpasses for hånd | layouten sendes i hver header, så klienten setter seg opp selv |
 | navn skrevet inn under Innstillinger i klienten | navn skrevet inn i PLS-en (`TcpLinkNames`), sendt til klienten ved tilkobling |
 | ingenting logges mens PC-en er av | retentiv historikk i PLS-en (`TcpLinkHistory`), hentes ved hver tilkobling |
+| ERROR-dioden ses bare på CPU-en | ERROR/MAINT-dioden, OB82 og OB80 i klienten og i historikken (`TcpLinkDiag`) |
+| diagnosebufferen leses i TIA | diagnosebufferen i nettvisningen, med tekst, lagret på Pi-en (`tcplink_diagbuf.js`) |
 
 Blokken vet **hva slags** data hver plass inneholder, aldri **hva de
 betyr**. Den avgjørelsen flyttes til det ene stedet der du kaller blokken,
@@ -77,11 +79,15 @@ Generer blokker fra kilde, i denne rekkefølgen:
 8. `LinkNames.db`: navne-DB-en din, fylt ut med kjøreverk-navnene som
    eksempel. Rediger den, eller lag din egen ut fra den.
 9. `LinkHistory.db`: historikken. Sjekk at den er **retentiv** (§3.8).
+10. `LinkDiag.db` og så `TcpLinkDiag.scl` (tre FC-er som fyller `LinkDiag`),
+    bare hvis du vil ha CPU-diagnosen (§3.9).
 
 `tcplink_client.py` og `tcplink_client.js` er minimale klienter for testing,
 i Python og i Node (§6). `tcplink_web.js` og `tcplink_web.html` er en
-sanntidsvisning i nettleseren, kun for lesing (§6.1). Mappen `arkitektur/`
-har fem SVG-kart over prosjektet (se Arkitekturkart over).
+sanntidsvisning i nettleseren, kun for lesing (§6.1). `tcplink_diagbuf.js`
+henter diagnosebufferen fra PLS-ens web-server til den samme visningen
+(§6.2). Mappen `arkitektur/` har fem SVG-kart over prosjektet (se
+Arkitekturkart over).
 
 FB-en må forbli **ikke-optimert**: formatet på linjen er strukturens layout.
 
@@ -119,7 +125,7 @@ Standardstørrelser:
 
 | | bits | words | times | ints | dints | reals | byte på linjen |
 |---|---|---|---|---|---|---|---|
-| Tx (PLS → PC) | 32 | 8 | 4 | 16 | 8 | 8 | 196 |
+| Tx (PLS → PC) | 32 | 16 | 4 | 16 | 8 | 8 | 212 |
 | Rx (PC → PLS) | 16 | 4 | – | 12 | 4 | 4 | 80 |
 
 ---
@@ -241,10 +247,10 @@ LinkNames.db                         navngir
   den første datameldingen. Aldri igjen på den forbindelsen med mindre du
   gir `resendNames` en stigende flanke, for eksempel etter at du har lastet
   ned nye navn. En klient som kobler til på nytt, får dem igjen.
-  Datameldingene blir ikke større: de holder seg på 196 byte.
+  Datameldingene blir ikke større: de holder seg på 212 byte.
 * **Hva det koster:** arbeidsminne for strengene, én gang, og startverdiene
   i lastminnet. Hvert navn er sin deklarerte lengde + 2 byte, så
-  standardstørrelsene gir 116 × 22 = 2 552 byte (2 584 med headeren).
+  standardstørrelsene gir 124 × 22 = 2 728 byte (2 760 med headeren).
   Navnene sendes **som referanse** (`VAR_IN_OUT`), så de finnes bare én
   gang: TSEND sender rett fra DB-en din, og ingenting kopieres hver syklus.
 * **Gi navn bare til det du trenger.** En navnearray kan være kortere enn
@@ -256,6 +262,19 @@ LinkNames.db                         navngir
   kommandoknapper beholder hele teksten, og det gjør også
   `'Pumpe [A] trykk'` og `'Fotocelle (3.0 m)'`. En enhet er bare en
   merkelapp: den regner aldri om noe.
+* **Visning:** et `{format}` helt til slutt i navnet sier hvordan verdien
+  skal vises, `'ERROR-diode {led}'`. Klientene tar merket bort fra navnet
+  før de ser etter en enhet, så rekkefølgen er `'Navn [enhet] {format}'`.
+
+  | Merke | Gjelder | Vises som |
+  |---|---|---|
+  | `{dec}` | words | desimaltall i stedet for heksadesimalt |
+  | `{led}` | words | svaret fra LED-instruksjonen som tekst: `av`, `lyser`, `blinker` … (§3.9) |
+  | `{ob80}` | words | `fault_id` fra OB80 som tekst: `syklustid overskredet` … (§3.9) |
+  | `{alarm}` | bits | rød lampe i nettvisningen i stedet for grønn |
+
+  Et ukjent merke, eller et merke på en annen type plass, fjernes fra navnet
+  og endrer ingenting annet. Merket teller med i strenglengden.
 * **Lengde:** `String[20]` som standard. Enhver lengde som er et partall,
   virker, og hver array kan ha sin egen.
 * **Tegn:** S7-strenger bruker én byte per tegn, og klienten dekoder
@@ -334,9 +353,9 @@ verdi (0/1 for en bit, hele wordet for et word). Løpenummeret nullstilles
 aldri, og post nummer *r* ligger alltid på plass (*r* − 1) MOD størrelsen,
 så bufferen trenger ingen pekere.
 
-**Plass.** 200 poster er 4 008 byte retentivt minne. En 1215C har høyst
-10 KB retentivt minne **totalt**, delt med alt annet som er retentivt i
-programmet. Sjekk under *Program info → Resources* før du gjør bufferen
+**Plass.** 200 poster er 4 008 byte retentivt minne. En S7-1200 har
+10 KB retentivt minne **totalt**, 14 KB fra firmware 4.5, delt med alt
+annet som er retentivt i programmet. Sjekk under *Program info → Resources* før du gjør bufferen
 større. Hvor lenge 200 poster rekker, avhenger av hvor mye du logger: med
 20 hendelser i timen er det ti timer, med 20 om dagen er det ti dager.
 
@@ -363,6 +382,130 @@ retentiv. Sjekk etter import at kolonnen *Retain* er krysset av i DB-en; i
 en ikke-optimert DB gjelder det hele DB-en. Lastes DB-en ned med
 reinitialisering, for eksempel etter en endret UDT, starter historikken på
 nytt fra post 1, og klientene tømmer sin kopi.
+
+### 3.9 CPU-diagnose
+
+`TcpLink` vet ingenting om diagnose, og trenger ikke det.
+`TcpLinkDiag.scl` fyller DB-en `LinkDiag` med det CPU-en selv vet. Du
+legger feltene i ledige plasser i `txDigital` som alt annet, historikken
+logger dem med PLS-tid, og klientene viser dem som tekst. `TcpLink` og
+formatet på linjen er uendret.
+
+| Del | Kalles fra | Forteller |
+|---|---|---|
+| `TcpLinkDiagLeds` | OB1, hver syklus | om ERROR- og MAINT-dioden lyser eller blinker: alt CPU-en selv mener er en feil |
+| `TcpLinkDiagOb82` | OB82, *Diagnostic error interrupt* | at en diagnosealarm kom eller gikk, og på hvilken hardware-ID og kanal |
+| `TcpLinkDiagOb80` | OB80, *Time error interrupt* | at syklustiden er overskredet |
+
+**Hvorfor** feilen kom, står fortsatt bare i diagnosebufferen (*Online &
+diagnostics → Diagnostics buffer* i TIA, eller CPU-ens webserver). Det du
+får på Pi-en, er **at** og **når**, og det står i historikken også etter at
+PLS-en har startet på nytt.
+
+**Med bare CPU-en** (1215C uten moduler) er det lite som kan utløse OB82:
+i praksis de innebygde analoge kanalene, og bare hvis diagnose er slått på
+for dem i enhetskonfigurasjonen. OB82 er likevel verdt å ha: kommer det
+moduler senere, havner alarmene deres her uten endringer. Diodene og OB80
+gjelder alltid.
+
+**Går CPU-en i STOP,** kjører ingen kode, og linken faller. Klienten ser at
+linken er nede, og de siste verdiene blir stående gråtonet. Årsaken står i
+diagnosebufferen.
+
+#### Oppsett i TIA
+
+1. **Importer** `LinkDiag.db` og så `TcpLinkDiag.scl` (§1).
+2. **OB82:** *Add new block → Organization block → Diagnostic error
+   interrupt*, språk SCL, og lim inn:
+   ```scl
+   "TcpLinkDiagOb82"(ioState := #IO_state, hwId := #LADDR,
+                     channel := #Channel, multiError := #MultiError);
+   ```
+3. **OB80:** *Add new block → Organization block → Time error interrupt*,
+   språk SCL. Hold den kort, bare dette kallet:
+   ```scl
+   "TcpLinkDiagOb80"(faultId := #fault_id);
+   ```
+4. **Plass:** `TcpLinkTxDigital` har 16 words og `TcpLinkNames` 16
+   `txWords`, så `words[8..15]` er ledige til diagnosen. Har et prosjekt
+   UDT-ene fra før denne endringen (8 words), utvid dem i TIA: `words :
+   Array[0..7]` blir `Array[0..15]` i `TcpLinkTxDigital`, og `txWords :
+   Array[0..7]` blir `Array[0..15]` i `TcpLinkNames`. Ingenting annet
+   (§8.1). `LinkHistory` bruker ingen av disse typene, så historikken
+   overlever nedlastingen.
+5. **I OB1:** diodene før tilordningen, og tilordningen sammen med resten
+   av steg 3 i §3.2:
+   ```scl
+   "TcpLinkDiagLeds"(cpu := "Local~Common");
+
+   "LinkDB".txDigital.bits[30]  := "LinkDiag".errorLed;
+   "LinkDB".txDigital.bits[31]  := "LinkDiag".maintLed;
+   "LinkDB".txDigital.words[8]  := "LinkDiag".errorLedState;
+   "LinkDB".txDigital.words[9]  := "LinkDiag".maintLedState;
+   "LinkDB".txDigital.words[10] := UINT_TO_WORD("LinkDiag".diagCount);
+   "LinkDB".txDigital.words[11] := "LinkDiag".diagHwId;
+   "LinkDB".txDigital.words[12] := UINT_TO_WORD("LinkDiag".diagChannel);
+   "LinkDB".txDigital.words[13] := "LinkDiag".diagIoState;
+   "LinkDB".txDigital.words[14] := UINT_TO_WORD("LinkDiag".timeErrCount);
+   "LinkDB".txDigital.words[15] := "LinkDiag".timeErrId;
+   ```
+   Plassene er bare et eksempel: bruk hvilke som helst ledige. Vil du ha
+   `diagMulti` med, legg den i en ledig bit.
+
+   **Bitene 30 og 31** bare hvis de er ledige. I kjøreverk-tilordningen
+   (§9) er alle 32 bits i bruk. Da dropper du dem: `words[8]` og `[9]`
+   sier det samme og mer til, og de setter også i gang hentingen av
+   diagnosebufferen (§6.2).
+6. **Navn** i `LinkNames`, med merkene fra §3.6. `LinkNames.db` har
+   wordene ferdig utfylt som eksempel; bitene er ikke med, av samme grunn
+   som over:
+   ```
+   txBits[30]  := 'ERROR-diode {alarm}';
+   txBits[31]  := 'MAINT-diode {alarm}';
+   txWords[8]  := 'ERROR-diode {led}';
+   txWords[9]  := 'MAINT-diode {led}';
+   txWords[10] := 'OB82-kall {dec}';
+   txWords[11] := 'OB82 HW-ID {dec}';
+   txWords[12] := 'OB82 kanal {dec}';
+   txWords[13] := 'OB82 IO-status';
+   txWords[14] := 'OB80-kall {dec}';
+   txWords[15] := 'OB80 fault_id {ob80}';
+   ```
+7. **Historikk:** sett `histMask.words[8]` til og med `[15]` til `16#FFFF`
+   (§3.8). Bitene 30 og 31 trenger ingen maske: `words[8]` og `[9]` endres
+   samtidig og sier mer (lyser eller blinker).
+
+**Hver tidsfeil gir én post** når tellerne logges. Fyller tidsfeil
+historikken, ta bort masken på `words[14]` og behold `words[15]`: da
+logges bare første gang og når koden endres.
+
+**Ved oppstart av PLS-en** logges ingenting de to første kallene (§3.8).
+Er noe allerede galt ved oppstart, ser du det i verdiene, men ikke
+nødvendigvis som en hendelse i historikken. Tellerne i `LinkDiag` starter
+på 0 ved hver oppstart; det som skjedde før, står i historikken.
+
+#### Svarene
+
+`errorLedState` og `maintLedState` er svaret fra LED-instruksjonen (diode
+2 = ERROR, 3 = MAINT):
+
+| Svar | `{led}` viser | `errorLed` / `maintLed` |
+|---|---|---|
+| 0 | `finnes ikke` | FALSE |
+| 1 | `av` | FALSE |
+| 2 / 3 | `lyser` / `lyser (farge 2)` | TRUE |
+| 4 / 5 | `blinker` / `blinker (farge 2)` | TRUE |
+| 6 | `blinker vekselvis` | TRUE |
+| 9 | `ikke tilgjengelig` | FALSE |
+| 16#8xxx | `LED-feil 16#8xxx`: kallet feilet, oftest feil hardware-ID | FALSE |
+
+`timeErrId` er `fault_id` fra OB80: `16#01` er *syklustid overskredet*,
+`16#02` at en OB ble startet mens den forrige fortsatt kjørte. Andre koder
+vises som `tidsfeil 16#00xx`; slå dem opp under OB80 i TIA-hjelpen.
+
+Begge tabellene er hentet fra beskrivelser av instruksjonene, ikke sjekket
+mot håndboken for din firmware. Trykk F1 på `LED` og på OB80 i TIA og
+sammenlign (§10).
 
 ---
 
@@ -483,7 +626,7 @@ Layout-headeren gjør tre jobber:
 
 Sendes én gang per forbindelse før den første datameldingen, og på hver
 flanke på `resendNames`. Det er `TcpLinkNames`-DB-en nøyaktig slik den
-ligger i minnet, 2 584 byte med standardstørrelsene.
+ligger i minnet, 2 760 byte med standardstørrelsene.
 
 | Offset | Størrelse | Felt | Merknad |
 |---|---|---|---|
@@ -564,6 +707,9 @@ Regler alle klienter må følge:
   én melding.
 * **Vent navnene først, men ikke vær avhengig av dem.** Ta vare på det siste
   settet du fikk, og merk med det. En plass uten navn viser indeksen sin.
+* **Ta et `{format}` bort fra slutten av navnet før du ser etter en enhet**
+  (§3.6), og bruk det til å vise verdien. `splitFormat` og `formatWord` i
+  `tcplink_client.js` (`split_format` og `format_word` i Python) gjør det.
 * **Send ingenting før den første datameldingen har kommet.** Den forteller
   deg layouten på kommandorammen. Navne- og historikkmeldingene gjør ikke det.
 * **Behold bare historikk PLS-en fortsatt har**: poster fra og med `oldest`
@@ -596,8 +742,9 @@ PLS ──TCP──► tcplink_web.js ──HTTP + Server-Sent Events──► n
 ```
 
 * **Hver verdi under navnet fra PLS-en**, med enheten fra navnet. Lamper for
-  bits, heksadesimalt for words, tider med hvor lenge siden de var, regnet
-  mot PLS-klokka. Verdier blinker når de endres.
+  bits, røde for navn med `{alarm}`. Heksadesimalt for words, eller tekst
+  for navn med `{led}`, `{ob80}` eller `{dec}` (§3.6). Tider med hvor lenge
+  siden de var, regnet mot PLS-klokka. Verdier blinker når de endres.
 * **Kommandoer PLS-en tar imot** listes opp med navn, men sendes ikke.
 * **Vis plasser uten navn** tar med resten, merket med indeks. Nettleseren
   husker valget.
@@ -606,7 +753,8 @@ PLS ──TCP──► tcplink_web.js ──HTTP + Server-Sent Events──► n
   gråtonet. Serveren kobler til på nytt hvert 3. sekund av seg selv, og får
   navnene igjen ved hver tilkobling.
 * **Historikk** fra PLS-ens retentive minne: hver hendelse med navnet på
-  plassen, PLS-tid og ny verdi, nyeste øverst. Nye hendelser blinker. En
+  plassen, PLS-tid og ny verdi (som tekst etter samme merker), nyeste
+  øverst. Nye hendelser blinker. En
   linje over sier hvor mange plasser bufferen har, og hvor mange eldre
   hendelser som er overskrevet.
 
@@ -615,7 +763,86 @@ bare inneholder nuller, og setter aldri en kommando. Som enhver klient tar
 den PLS-ens ene forbindelse, så stopp andre klienter på den porten først.
 
 Serveren bruker protokollkoden i `tcplink_client.js`, som må ligge ved siden
-av den, sammen med `tcplink_web.html`. Bare det som er innebygd i Node.
+av den, sammen med `tcplink_web.html` og `tcplink_diagbuf.js`. Bare det som
+er innebygd i Node.
+
+### 6.2 Diagnosebuffer i nettvisningen
+
+Nettvisningen har et eget kort for PLS-ens diagnosebuffer, med de samme
+kolonnene som på PLS-ens egen side: nummer, tid, dato, status og hendelse.
+Klikk på en rad for å se den lange teksten, slik PLS-en viser den.
+**Oppdater** henter bufferen på nytt.
+
+```
+PLS  web-server (443) ◄── GET /ClientArea/DiagTable.mwsl ── tcplink_web.js ──► nettleser
+                      ──── HTML ──────────────────────────►  (leser radene,
+                                                              lagrer på Pi-en)
+```
+
+**Hvordan.** Web API-et (JSON) kom i firmware 4.5, og et prosjekt i TIA
+V16 kan ha høyst 4.4. Web-serveren har likevel en side for
+diagnosebufferen. `tcplink_diagbuf.js` ber om de samme sidene som
+nettleseren og plukker radene ut av HTML-en:
+
+| Side | Gir |
+|---|---|
+| `/ClientArea/DiagTable.mwsl?ThrNav=0` | oppføring 1–25, nyeste først |
+| `/ClientArea/DiagTable.mwsl?ThrNav=1` | oppføring 26–50 |
+| `/ClientArea/DiagLong.mwsl?EventData=…` | den lange teksten til én oppføring |
+
+Hver rad har en fast nøkkel (`data-event-data`): hendelses-ID, tid i UTC
+med nanosekunder, og om hendelsen kommer eller går. Den lange teksten
+hentes derfor bare én gang per oppføring.
+
+**Krav i TIA:**
+* *Activate web server on this module* er krysset av, og
+  maskinvarekonfigurasjonen er lastet ned.
+* Brukeren **Everybody** har *query diagnostics*. Det gir bare lesing av
+  diagnose. Gi ikke Everybody noe mer enn det, og aldri *write tags*.
+
+**Når den henter:**
+
+| Når | Hvorfor |
+|---|---|
+| serveren starter | siden skal ha innhold med en gang |
+| linken kommer opp | Pi-en har startet, eller PLS-en er tilbake |
+| linken faller fra å ha vært oppe | CPU-en kan ha gått i STOP; web-serveren svarer også da |
+| et signal med `{led}`, `{ob80}` eller `{alarm}` i navnet endrer seg (§3.9) | noe har skjedd i CPU-en |
+| **Oppdater** | når du vil |
+
+Flere grunner tett etter hverandre gir én henting, og det går aldri mer
+enn én om gangen. Ingenting hentes ellers: det er ingen fast polling.
+
+**Lagring.** PLS-en har bare 50 plasser, og én nedlasting fra TIA kan gi
+ti nye oppføringer. Pi-en tar vare på alt den har sett, opptil 500
+oppføringer, i `diagbuffer.json` ved siden av `tcplink_web.js`. Oppføringer
+PLS-en har skjøvet ut, vises med – i stedet for nummer.
+
+| Miljøvariabel | Betyr |
+|---|---|
+| `DIAG_HOST=10.0.123.60` | hent fra en annen adresse enn PLS-en for linken |
+| `DIAG_HOST=av` | ingen diagnosebuffer; kortet vises ikke |
+| `DIAG_FILE=/sti/fil.json` | lagre et annet sted |
+
+**Tid.** Alt i kortet er i UTC, som i historikken.
+
+**Fart.** Web-serveren i en S7-1200 bruker 3–4 s på en ny kryptert
+forbindelse. Serveren husker TLS-økten, så bare første henting etter
+oppstart betaler for det. En vanlig oppdatering tar rundt 2 s. Første
+henting med 50 lange tekster tar omtrent 20 s; radene vises med en gang, og
+tekstene kommer etter hvert.
+
+**Kommandolinje.** `node tcplink_diagbuf.js 10.0.123.52` skriver ut hele
+bufferen med lange tekster, uten nettvisningen.
+
+**Begrensninger:**
+* Sidene er laget for nettleseren, ikke for programmer. Endrer en ny
+  firmware eller TIA-versjon dem, må `parseTable` og `parseLong` i
+  `tcplink_diagbuf.js` tilpasses. Med TIA V17 og firmware 4.5 i prosjektet
+  kan Web API-et ta over.
+* Teksten er på engelsk. PLS-en har ikke norsk.
+* PLS-ens sertifikat er laget av PLS-en selv og blir ikke sjekket. Det som
+  hentes, er bare tekst til visning, og ingen passord sendes.
 
 ---
 
@@ -762,7 +989,8 @@ forbindelses-ID-er.
 Testet på en CPU 1215C DC/DC/DC:
 
 * **Bekreftet: `CountOfElements` returnerer den deklarerte størrelsen.**
-  `txLen` og `rxLen` viser `196` og `80`, og klienten dekoder layouten.
+  `txLen` og `rxLen` viste `196` og `80` (med 8 words; 16 words gir
+  `212`), og klienten dekoder layouten.
 * **Bekreftet: TRCV godtar en `LEN` som er kortere enn `DATA`-området.**
   `rxMsg` er 82 byte og `rxLen` 80; `recvErrors` holder seg på 0 med rammer
   hvert 500. ms.
@@ -770,19 +998,41 @@ Testet på en CPU 1215C DC/DC/DC:
   ingen feil på noen instruksjon.
 * **Bekreftet: navnene sendes rett fra navne-DB-en via in/out-parameteren**,
   og både terminalklienten og nettvisningen viser dem.
+* **Bekreftet: historikken** kompilerer, logger og vises i nettvisningen.
+* **Bekreftet: diagnosebufferen leses fra web-serveren** (§6.2), alle 50
+  oppføringer med lang tekst, uten innlogging. CPU-en har firmware 4.5.1,
+  og prosjektet står på 4.4 (TIA V16). Web API-et på `/api/jsonrpc` svarer
+  med et tomt HTTP 400 på alt i den kombinasjonen.
 
 Ikke testet ennå:
 
 * **De norske eksempelnavnene** i `LinkNames.db` med æ, ø og å. Åpne DB-en
   etter import og sjekk at `txReals[2]` viser `'Strøm [A]'`.
-* **Historikken.** Den er testet mot en simulert PLS, ikke på CPU-en.
-  - Etter import: `LinkHistory` skal ha *Retain* krysset av.
-  - Velg ut noen signaler i `histMask`, endre dem, og se at `histNewest`
-    øker.
-  - Slå strømmen av og på: `histNewest` skal være som før, og
-    nettvisningen skal vise de samme hendelsene igjen.
-  - Stopper kompileringen på `BOOL_TO_WORD`, bytt det ut med
-    `SEL(G := #txDigital.bits[#i], IN0 := 16#0000, IN1 := 16#0001)`.
+* **Historikken over et strømbrudd**, hvis du ikke har prøvd det: slå
+  strømmen av og på. `histNewest` skal være som før, og nettvisningen skal
+  vise de samme hendelsene igjen.
+* **Diagnosebufferen når CPU-en er i STOP.** Web-serveren skal svare også
+  da. Sett CPU-en i STOP fra TIA mens nettvisningen er åpen: kortet skal
+  hente av seg selv («linken falt») og vise STOP-oppføringen.
+* **CPU-diagnosen (§3.9).** Testet mot en simulert PLS, ikke på CPU-en.
+  - Kompilering: at `LED(LADDR := …, LED := …)` har denne formen i din
+    TIA, at `"Local~Common"` godtas som `HW_IO`, og at `#hwId` (`HW_ANY`)
+    kan tilordnes et `Word` i `TcpLinkDiagOb82`. Dette er de tre linjene å
+    se på først hvis `TcpLinkDiag.scl` ikke kompilerer.
+  - Navnene på startinformasjonen i OB82 (`IO_state`, `LADDR`, `Channel`,
+    `MultiError`) og OB80 (`fault_id`). Står de annerledes under *Input* i
+    OB-ens grensesnitt, bruk navnene derfra.
+  - `"Local~Common"`: viser nettvisningen `LED-feil 16#…` på
+    `ERROR-diode`, er hardware-ID-en feil. Velg CPU-en fra
+    systemkonstantene i listen (*PLC tags → Show all tags → System
+    constants*).
+  - Svarene fra `LED` og kodene i `fault_id` mot F1-hjelpen (tabellene i
+    §3.9).
+  - En enkel prøve på MAINT: tving (force) en inngang. MAINT-dioden skal
+    lyse, og `MAINT-diode` skal vise `lyser`. Ta bort tvangen etterpå.
+  - Hva CPU-en gjør ved en tidsfeil med og uten OB80: les *Time error
+    interrupt* i TIA-hjelpen før du stoler på det. Prøv aldri en tidsfeil
+    med kjøretøyet tilkoblet.
 
 ### Hvis linken faller ut rett etter tilkobling
 

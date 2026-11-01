@@ -1,0 +1,255 @@
+{
+ "fetchedAt": 1793534039597,
+ "entries": [
+  {
+   "key": "02400C18E3E2A954259D3801",
+   "text": "Follow-on operating mode change - CPU changes from STARTUP to RUN mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STARTUP to RUN mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400E18E3E2A94DDD98E001",
+   "text": "Communication initiated request: WARM RESTART - CPU changes from STOP to STARTUP mode",
+   "long": "CPU info: Communication initiated request: WARM RESTART\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STOP to STARTUP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E3E2A94DC774E801",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n    Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E3E2A888E0A07801",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n  - Manual restart required\n   Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E3E2A85909F7F001",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n  - HW configuration not loaded or loading/change not successfully finished\n  - Manual restart required\n  Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E3E2A80B1A339801",
+   "text": "Follow-on operating mode change - CPU changes from STOP to STOP mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - Unacceptable difference between expected and actual configuration\n - HW configuration not loaded or loading/change not successfully finished\n\n CPU changes from STOP to STOP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E3E2A78D4DD34801",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n  - Unacceptable difference between expected and actual configuration\n  - HW configuration not loaded or loading/change not successfully finished\n  - Manual restart required\n Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E3E2A77B5D6EF001",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n  - HW configuration not loaded or loading/change not successfully finished\n  - Manual restart required\n  Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E3E2A75D7AC88801",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n  - Manual restart required\n   Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400E18E3E2A75779C3F801",
+   "text": "Communication initiated request: STOP - CPU changes from RUN to STOP mode",
+   "long": "CPU info: Communication initiated request: STOP\nPending startup inhibit(s):\n - Manual restart required\n\n CPU changes from RUN to STOP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E3E287DFE8B6B001",
+   "text": "Follow-on operating mode change - CPU changes from STARTUP to RUN mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STARTUP to RUN mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400E18E3E287D99F6A3801",
+   "text": "Communication initiated request: WARM RESTART - CPU changes from STOP to STARTUP mode",
+   "long": "CPU info: Communication initiated request: WARM RESTART\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STOP to STARTUP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E3E287D989B78801",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n    Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E3E28094DD943001",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n  - Manual restart required\n   Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E3E27F03C8747001",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n  - PLC program not loaded or loading/change not successfully finished\n  - Manual restart required\n  Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E3E27E151903F801",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n  - Manual restart required\n   Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400E18E3E27E0F1DFE9001",
+   "text": "Communication initiated request: STOP - CPU changes from RUN to STOP mode",
+   "long": "CPU info: Communication initiated request: STOP\nPending startup inhibit(s):\n - Manual restart required\n\n CPU changes from RUN to STOP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "0239CB18E38A393A897BD800",
+   "text": "IO device failure - -",
+   "long": "Error: IO device failure -\n\n HW_ID=   279\n\nOutgoing event"
+  },
+  {
+   "key": "02400C18E389AE4751003801",
+   "text": "Follow-on operating mode change - CPU changes from STARTUP to RUN mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STARTUP to RUN mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "0239CB18E389AE450A92A801",
+   "text": "IO device failure - IP address exists multiple times -",
+   "long": "Error: IO device failure - IP address exists multiple times\n\n HW_ID=   279\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E389A02D67C75001",
+   "text": "Follow-on operating mode change - CPU changes from STOP to STARTUP mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STOP to STARTUP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E389A0275EFA9001",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n    Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E389A0275AE79801",
+   "text": "Follow-on operating mode change - CPU changes from STOP (initialization) to STOP mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STOP (initialization) to STOP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400118E3899F24B22F2001",
+   "text": "Power on - CPU changes from NOPOWER to STOP (initialization) mode",
+   "long": "CPU info: Power on\n\nmemory card type: No memory card\n CPU changes from NOPOWER to STOP (initialization) mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400218E36C3F6F2A412801",
+   "text": "Power off - CPU changes from RUN to NOPOWER mode",
+   "long": "CPU info: Power off\n CPU changes from RUN to NOPOWER mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "0239CB18E36C3F6C26C52801",
+   "text": "IO device failure - Watchdog time expired -",
+   "long": "Error: IO device failure - Watchdog time expired\n\n HW_ID=   279\n\nIncoming event"
+  },
+  {
+   "key": "0239CB18E367057D1A997000",
+   "text": "IO device failure - -",
+   "long": "Error: IO device failure -\n\n HW_ID=   279\n\nOutgoing event"
+  },
+  {
+   "key": "02400C18E362BF28536D0801",
+   "text": "Follow-on operating mode change - CPU changes from STARTUP to RUN mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STARTUP to RUN mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "0239CB18E362BF25774B4001",
+   "text": "IO device failure - IP address exists multiple times -",
+   "long": "Error: IO device failure - IP address exists multiple times\n\n HW_ID=   279\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E362B0EED5171001",
+   "text": "Follow-on operating mode change - CPU changes from STOP to STARTUP mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STOP to STARTUP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E362B0E8B5536801",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n    Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E362B0E8B19E3001",
+   "text": "Follow-on operating mode change - CPU changes from STOP (initialization) to STOP mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STOP (initialization) to STOP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400118E362AFE56DF99001",
+   "text": "Power on - CPU changes from NOPOWER to STOP (initialization) mode",
+   "long": "CPU info: Power on\n\nmemory card type: No memory card\n CPU changes from NOPOWER to STOP (initialization) mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400218E36192CD6DD88801",
+   "text": "Power off - CPU changes from RUN to NOPOWER mode",
+   "long": "CPU info: Power off\n CPU changes from RUN to NOPOWER mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "0239CB18E36192CA2CB74801",
+   "text": "IO device failure - Watchdog time expired -",
+   "long": "Error: IO device failure - Watchdog time expired\n\n HW_ID=   279\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E361210638476001",
+   "text": "Follow-on operating mode change - CPU changes from STARTUP to RUN mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STARTUP to RUN mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E36119032C165801",
+   "text": "Follow-on operating mode change - CPU changes from STOP to STARTUP mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STOP to STARTUP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E36118FD138E4001",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n    Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E36118FD0FF46001",
+   "text": "Follow-on operating mode change - CPU changes from STOP (initialization) to STOP mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STOP (initialization) to STOP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400118E36117FA0D8AF801",
+   "text": "Power on - CPU changes from NOPOWER to STOP (initialization) mode",
+   "long": "CPU info: Power on\n\nmemory card type: No memory card\n CPU changes from NOPOWER to STOP (initialization) mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400218E36116860EAD6801",
+   "text": "Power off - CPU changes from RUN to NOPOWER mode",
+   "long": "CPU info: Power off\n CPU changes from RUN to NOPOWER mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E359BCED97513001",
+   "text": "Follow-on operating mode change - CPU changes from STARTUP to RUN mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STARTUP to RUN mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "0239CB18E359BCEB07A1B801",
+   "text": "IO device failure - IP address exists multiple times -",
+   "long": "Error: IO device failure - IP address exists multiple times\n\n HW_ID=   279\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E359AF35ADB5F801",
+   "text": "Follow-on operating mode change - CPU changes from STOP to STARTUP mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STOP to STARTUP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E359AF2FA8D13801",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n    Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E359AF2FA51C0001",
+   "text": "Follow-on operating mode change - CPU changes from STOP (initialization) to STOP mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STOP (initialization) to STOP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400118E359AE2C83C0B801",
+   "text": "Power on - CPU changes from NOPOWER to STOP (initialization) mode",
+   "long": "CPU info: Power on\n\nmemory card type: No memory card\n CPU changes from NOPOWER to STOP (initialization) mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400218E35999C5C1C84801",
+   "text": "Power off - CPU changes from STARTUP to NOPOWER mode",
+   "long": "CPU info: Power off\n CPU changes from STARTUP to NOPOWER mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400C18E359989FDB361001",
+   "text": "Follow-on operating mode change - CPU changes from STOP to STARTUP mode",
+   "long": "CPU info: Follow-on operating mode change\nPower-on mode set: WARM RESTART to RUN\n\nPending startup inhibit(s):\n - No startup inhibit set\n\n CPU changes from STOP to STARTUP mode\n\n HW_ID=    52\n\nIncoming event"
+  },
+  {
+   "key": "02400018E3599899B5CD1801",
+   "text": "New startup information - Current CPU operating mode: STOP",
+   "long": "CPU info: New startup information\nPending startup inhibit(s):\n    Current CPU operating mode: STOP\n\n HW_ID=    52\n\nIncoming event"
+  }
+ ]
+}

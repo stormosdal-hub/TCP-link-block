@@ -61,7 +61,7 @@ VERSION : 1.3
 // connId og localPort.
 //
 // =====================================================================
-// MELDING PLS -> PC, format 7. 196 byte med standardstørrelsene.
+// MELDING PLS -> PC, format 7. 212 byte med standardstørrelsene.
 //
 //   byte  0      magic   16#A5
 //   byte  1      ver     7
@@ -75,8 +75,8 @@ VERSION : 1.3
 //                UDT-ene: bits, words, times, ints, dints, reals
 //
 //   Med standardstørrelsene:
-//     32..35   bits   32      36..51   words   8      52..99   times  4
-//    100..131  ints   16     132..163  dints   8     164..195  reals  8
+//     32..35   bits   32      36..67   words  16      68..115  times  4
+//    116..147  ints   16     148..179  dints   8     180..211  reals  8
 //
 // LAYOUT -- headeren beskriver innholdet, så en klient trenger ingen
 // konfigurasjon for å dekode det, og en UDT med ny størrelse kan ikke bli
@@ -95,7 +95,7 @@ VERSION : 1.3
 //
 // =====================================================================
 // NAVN, kind 1 -- PLS -> PC, én gang per forbindelse, FØR den første
-// datameldingen, og igjen på hver stigende flanke på resendNames. 2584 byte
+// datameldingen, og igjen på hver stigende flanke på resendNames. 2760 byte
 // med standardstørrelsene. Det er "TcpLinkNames"-DB-en til den som kaller
 // blokken, sendt slik den ligger i minnet:
 //

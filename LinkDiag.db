@@ -1,0 +1,30 @@
+﻿DATA_BLOCK "LinkDiag"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 0.1
+NON_RETAIN
+   VAR
+      // Diagnose fra CPU-en, fylt av TcpLinkDiagLeds (OB1) og av
+      // TcpLinkDiagOb82 / TcpLinkDiagOb80 (fra OB82 og OB80). Logikken din
+      // legger feltene i ledige plasser i txDigital, og historikken logger
+      // dem med PLS-tid. Se TCP_LINK.md avsnitt 3.9.
+      //
+      // Ikke retentiv: tellerne starter på 0 ved oppstart. Det som har
+      // skjedd, ligger i historikken, som ER retentiv.
+
+      errorLed      : Bool;   // ERROR-dioden lyser eller blinker
+      maintLed      : Bool;   // MAINT-dioden lyser eller blinker (f.eks. tvangsstyring)
+      errorLedState : Word;   // svaret fra LED-instruksjonen for ERROR: 1 av, 2 lyser, 4 blinker
+      maintLedState : Word;   // det samme for MAINT
+
+      diagCount     : UInt;   // antall kall av OB82 siden oppstart (kommer OG går)
+      diagHwId      : Word;   // hardware-ID fra siste OB82
+      diagChannel   : UInt;   // kanal fra siste OB82
+      diagIoState   : Word;   // IO-status fra siste OB82
+      diagMulti     : Bool;   // TRUE = mer enn én feil på objektet
+
+      timeErrCount  : UInt;   // antall kall av OB80 siden oppstart
+      timeErrId     : Word;   // fault_id fra siste OB80: 16#01 = syklustid overskredet
+   END_VAR
+
+BEGIN
+END_DATA_BLOCK

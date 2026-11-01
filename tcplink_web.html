@@ -100,7 +100,7 @@
   .cols { columns: 260px auto; column-gap: 28px; }
   .row {
     display: grid;
-    grid-template-columns: 2.4em minmax(0, 1fr) auto;
+    grid-template-columns: 2.4em minmax(7em, 1fr) auto;
     align-items: center;
     gap: 8px;
     padding: 6px 2px;
@@ -119,6 +119,8 @@
   }
   .val .unit { color: var(--muted); margin-left: 4px; }
   .val.mono { font-family: var(--mono); font-size: 13px; }
+  /* tekst fra et {format} kan være lang: den brytes, så navnet beholder plassen */
+  .val.txt { white-space: normal; overflow-wrap: anywhere; }
   .val .ago { display: block; color: var(--muted); font-size: 12px; }
   .chg { animation: flash 0.9s ease-out; }
   @keyframes flash { from { background: var(--flash); } to { background: transparent; } }
@@ -129,6 +131,8 @@
     transition: background 0.15s, box-shadow 0.15s;
   }
   .row.on .lamp { background: var(--on); box-shadow: 0 0 0 4px var(--on-glow); }
+  /* {alarm} i navnet: rød lampe når biten er på */
+  .row.on.alarm .lamp { background: var(--bad); box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 22%, transparent); }
 
   .empty { color: var(--muted); padding: 8px 0 10px; font-size: 14px; }
 
@@ -136,9 +140,49 @@
   .hsum { color: var(--muted); font-size: 13px; margin-top: 4px; }
   .hsum .warn { color: var(--warn); }
   .hist { max-height: 440px; overflow-y: auto; }
-  .row.hrow { grid-template-columns: 4.2em minmax(0, 1fr) auto; }
+  .row.hrow { grid-template-columns: 3.4em minmax(min-content, 1fr) auto; }   /* hele tidsstempelet vises */
   .hrow .when { display: block; color: var(--muted); font-family: var(--mono); font-size: 12px; }
   .hrow.new .val { animation: flash 1.6s ease-out; }
+
+  /* diagnosebuffer: ligger utenfor main, så den ikke gråtones når linken er
+     nede. Det er da den trengs mest. */
+  .below { padding: 0 16px 16px; max-width: 1400px; margin: 0 auto; }
+  .dtop { display: flex; align-items: center; gap: 12px; }
+  .dtop button {
+    margin-left: auto;
+    font: inherit; font-size: 13px; font-weight: 600;
+    padding: 4px 14px; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--text);
+    cursor: pointer;
+  }
+  .dtop button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .dtop button:disabled { cursor: default; color: var(--muted); }
+  .hsum .bad { color: var(--bad); }
+  .dlist { max-height: 560px; overflow-y: auto; }
+  .row.drow { grid-template-columns: 2.6em 5.4em 6.8em 4.6em minmax(0, 1fr); align-items: baseline; cursor: pointer; }
+  .row.drow:hover:not(.dhead) { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+  .row.drow.dhead {
+    cursor: default; position: sticky; top: 0; background: var(--card);
+    color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .drow .t { font-family: var(--mono); font-size: 13px; }
+  .drow .ev { overflow-wrap: anywhere; }
+  .drow.out .st { color: var(--muted); }
+  .drow.new { animation: flash 1.6s ease-out; }
+  .dlong {
+    grid-column: 1 / -1; cursor: text;
+    margin: 4px 0 2px; padding: 8px 10px; border-radius: 6px;
+    background: var(--bg); white-space: pre-wrap; overflow-wrap: anywhere;
+    font-family: var(--mono); font-size: 12.5px;
+  }
+  .dlong .meta { display: block; margin-bottom: 6px; color: var(--muted); }
+  @media (max-width: 560px) {
+    /* nummer, tid, dato og status på én linje, hendelsen under */
+    .row.drow { grid-template-columns: 2.2em auto auto minmax(0, 1fr); }
+    .row.drow.dhead { display: none; }
+    .drow .st { text-align: right; }
+    .drow .ev { grid-column: 2 / -1; }
+  }
   footer { color: var(--muted); font-size: 13px; padding: 0 16px 24px; max-width: 1400px; margin: 0 auto; }
 </style>
 </head>
@@ -167,9 +211,21 @@
   <section class="wide"><div class="empty">Venter på PLS-en…</div></section>
 </main>
 
+<div class="below">
+  <section class="wide" id="dcard" hidden>
+    <div class="dtop">
+      <h2>Diagnosebuffer <small>fra PLS-ens web-server</small></h2>
+      <button type="button" id="drefresh">Oppdater</button>
+    </div>
+    <div class="hsum" id="dsum"></div>
+    <div class="rows dlist" id="dlist"></div>
+  </section>
+</div>
+
 <footer>
   Navnene kommer fra navne-DB-en i PLS-en. Denne siden er kun for lesing: serveren holder
   linken i live med kommandorammer som bare inneholder nuller, og setter aldri en kommando.
+  Oppdater ber serveren hente diagnosebufferen fra PLS-ens web-server på nytt.
 </footer>
 
 <script>
@@ -257,12 +313,13 @@ function addRows(parent, sec, kind) {
     return;
   }
   list.forEach(function (s) {
-    var row = el('div', 'row' + (s.l.named ? '' : ' unnamed'));
+    var row = el('div', 'row' + (s.l.named ? '' : ' unnamed') + (s.l.fmt === 'alarm' ? ' alarm' : ''));
     row.appendChild(el('span', 'idx', String(s.i)));
     var name = el('span', 'name', s.l.name);
     name.title = s.l.name;
     row.appendChild(name);
-    var val = el('span', 'val' + (kind === 'word' ? ' mono' : ''));
+    // words med {format} vises som tekst, de andre heksadesimalt i fast bredde
+    var val = el('span', 'val' + (kind === 'word' ? (s.l.fmt ? ' txt' : ' mono') : ''));
     if (kind === 'bit') val.appendChild(el('span', 'lamp'));
     else if (kind === 'cmd') { if (s.l.unit) val.appendChild(el('span', 'unit', s.l.unit)); }
     else val.textContent = '–';
@@ -363,7 +420,7 @@ function apply(quiet) {
         var ago = txt && data.tsValid ? fmtSpan(dtlMs(data.ts) - dtlMs(v)) : '';
         setText(cell, txt || 'aldri', ago, quiet);
       } else if (c.kind === 'word') {
-        setText(cell, fmtWord(v), '', quiet);
+        setText(cell, data.wordsText ? data.wordsText[i] : fmtWord(v), '', quiet);
       } else if (c.kind === 'real') {
         setText(cell, fmtReal(v), '', quiet);
       } else {
@@ -378,11 +435,11 @@ function apply(quiet) {
 }
 
 // ---------------------------------------------------------------- historikk
-// Navnet på plassen posten gjelder: section 0 = txDigital.bits, 1 = words.
-function histName(rec) {
+// Etiketten til plassen posten gjelder: section 0 = txDigital.bits, 1 = words.
+function histLabel(rec) {
   var sec = rec.section === 0 ? 'tx_bits' : 'tx_words';
   var l = labels && labels[sec] && labels[sec][rec.index];
-  return l ? l.name : sec.slice(3) + '[' + rec.index + ']';
+  return l || { name: sec.slice(3) + '[' + rec.index + ']', fmt: '' };
 }
 
 function renderHistory(quiet) {
@@ -407,25 +464,119 @@ function renderHistory(quiet) {
 
   hist.records.forEach(function (rec) {
     var isBit = rec.section === 0;
+    var lab = histLabel(rec);
     var fresh = !quiet && histSeen && rec.recNo > histSeen;
-    var row = el('div', 'row hrow' + (isBit && rec.value ? ' on' : '') + (fresh ? ' new' : ''));
+    var row = el('div', 'row hrow' + (isBit && rec.value ? ' on' : '') + (lab.fmt === 'alarm' ? ' alarm' : '') +
+                        (fresh ? ' new' : ''));
     row.appendChild(el('span', 'idx', '#' + rec.recNo));
-    var name = el('span', 'name', histName(rec));
-    name.title = histName(rec);
+    var name = el('span', 'name', lab.name);
+    name.title = lab.name;
     name.appendChild(el('span', 'when', (fmtDTL(rec.ts) || 'ukjent tid') + '.' + pad(rec.ts[6], 3)));
     row.appendChild(name);
-    var val = el('span', 'val' + (isBit ? '' : ' mono'));
+    var val = el('span', 'val' + (isBit ? '' : lab.fmt ? ' txt' : ' mono'));
     if (isBit) {
       val.appendChild(el('span', 'lamp'));
       val.appendChild(el('span', 'unit', rec.value ? 'på' : 'av'));
     } else {
-      val.textContent = fmtWord(rec.value);
+      val.textContent = rec.valueText || fmtWord(rec.value);
     }
     row.appendChild(val);
     list.appendChild(row);
   });
   histSeen = Math.max(histSeen, hist.newest);
 }
+
+// ----------------------------------------------------------- diagnosebuffer
+// Oppføringene fra PLS-ens diagnosebuffer, nyeste først, med tid i UTC fra
+// PLS-en. Nummeret er plassen i PLS-en nå; – betyr at PLS-en har skjøvet
+// oppføringen ut, men at Pi-en har tatt vare på den.
+var diag = null;
+var diagSeen = null;                  // nøkler som er vist; nye blinker
+var diagOpen = {};                    // nøkler med teksten åpen
+
+function utcParts(ms) {
+  var iso = new Date(ms).toISOString();
+  return { date: iso.slice(0, 10), time: iso.slice(11, 19), exact: iso.slice(11, 23) };
+}
+
+function diagSummary() {
+  var sum = $('dsum');
+  if (!diag || diag.off) return;
+  sum.textContent = diag.busy ? 'Henter fra ' + diag.host + ' (' + diag.reason + ')…'
+                  : diag.fetchedAt ? 'Hentet for ' + fmtSpan(Date.now() - diag.fetchedAt) +
+                                     (diag.fetchReason ? ' (' + diag.fetchReason + ')' : '')
+                  : 'Ikke hentet ennå';
+  // Antallet i PLS-en er bare kjent etter en henting som har lyktes.
+  sum.textContent += (diag.plcCount ? ' · ' + diag.plcCount + ' i PLS-en' : '') +
+                     ' · ' + diag.stored + ' tatt vare på · UTC';
+  if (diag.error) sum.appendChild(el('span', 'bad', ' · Kunne ikke hente: ' + diag.error));
+}
+
+function diagLong(e, t) {
+  var box = el('div', 'dlong');
+  box.appendChild(el('span', 'meta', 'Hendelses-ID 16#' + e.eventId + ' · ' + t.date + ' ' + t.exact + ' UTC'));
+  box.appendChild(document.createTextNode(
+    e.long !== null ? e.long || '(ingen tekst)'
+    : e.no ? 'Henter teksten…' : 'Teksten ble ikke hentet før PLS-en skjøv oppføringen ut.'));
+  return box;
+}
+
+function toggleDiag(key) {
+  if (diagOpen[key]) delete diagOpen[key]; else diagOpen[key] = true;
+  renderDiag();
+}
+
+function renderDiag() {
+  var card = $('dcard'), list = $('dlist'), btn = $('drefresh');
+  card.hidden = !diag || !!diag.off;
+  if (card.hidden) return;
+  btn.disabled = diag.busy;
+  btn.textContent = diag.busy ? 'Henter…' : 'Oppdater';
+  diagSummary();
+
+  var scroll = list.scrollTop;
+  list.textContent = '';
+  if (!diag.entries.length) {
+    list.appendChild(el('div', 'empty', diag.busy ? 'Henter…' : 'Ingen oppføringer ennå.'));
+    return;
+  }
+  var head = el('div', 'row drow dhead');
+  ['Nr', 'Tid', 'Dato', 'Status', 'Hendelse'].forEach(function (h) { head.appendChild(el('span', '', h)); });
+  list.appendChild(head);
+
+  diag.entries.forEach(function (e) {
+    var t = utcParts(e.ms);
+    var open = !!diagOpen[e.key];
+    var row = el('div', 'row drow ' + (e.incoming ? 'in' : 'out') +
+                        (diagSeen && !diagSeen[e.key] ? ' new' : ''));
+    row.tabIndex = 0;
+    row.setAttribute('role', 'button');
+    row.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (!e.no) row.title = 'Ikke lenger i PLS-en; Pi-en har tatt vare på den';
+    row.appendChild(el('span', 'idx', e.no ? String(e.no) : '–'));
+    row.appendChild(el('span', 't', t.time));
+    row.appendChild(el('span', 't', t.date));
+    row.appendChild(el('span', 'st', e.incoming ? 'Kommer' : 'Går'));
+    row.appendChild(el('span', 'ev', e.text));
+    if (open) row.appendChild(diagLong(e, t));
+    // Et klikk i den åpne teksten lukker ikke raden, så teksten kan markeres.
+    row.onclick = function (ev) { if (!ev.target.closest('.dlong')) toggleDiag(e.key); };
+    row.onkeydown = function (ev) {
+      if (ev.target === row && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); toggleDiag(e.key); }
+    };
+    list.appendChild(row);
+  });
+  list.scrollTop = scroll;
+
+  diagSeen = {};
+  diag.entries.forEach(function (e) { diagSeen[e.key] = true; });
+}
+
+$('drefresh').onclick = function () {
+  this.disabled = true;
+  this.textContent = 'Henter…';
+  fetch('diag/refresh', { method: 'POST' }).catch(function () {});   // svaret kommer som en 'diag'-hendelse
+};
 
 // ------------------------------------------------------------------ status
 function showStatus(s) {
@@ -444,7 +595,8 @@ function showStatus(s) {
 
 // ------------------------------------------------------------------ hendelser
 var es = new EventSource('events');
-es.addEventListener('status', function (e) { showStatus(JSON.parse(e.data)); });
+es.addEventListener('status', function (e) { showStatus(JSON.parse(e.data)); diagSummary(); });
+es.addEventListener('diag', function (e) { diag = JSON.parse(e.data); renderDiag(); });
 es.addEventListener('labels', function (e) { labels = JSON.parse(e.data); build(); });
 es.addEventListener('history', function (e) { hist = JSON.parse(e.data); renderHistory(false); });
 es.addEventListener('data', function (e) {

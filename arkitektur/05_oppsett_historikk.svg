@@ -48,7 +48,7 @@
   <text x="188" y="508" font-size="11" fill="#52606d">finnes fra før</text>
   <g font-family="Consolas, Menlo, monospace" font-size="12" fill="#3e4c59">
     <text x="48" y="532">bits</text>  <text x="132" y="532" fill="#7b8794">Array[0..31] of Bool</text>
-    <text x="48" y="550">words</text> <text x="132" y="550" fill="#7b8794">Array[0..7] of Word</text>
+    <text x="48" y="550">words</text> <text x="132" y="550" fill="#7b8794">Array[0..15] of Word</text>
     <text x="48" y="568">times</text> <text x="132" y="568" fill="#7b8794">Array[0..3] of DTL</text>
   </g>
 

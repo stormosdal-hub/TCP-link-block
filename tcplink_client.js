@@ -215,18 +215,45 @@ function splitUnit(section, text) {
   return m ? { name: m[1], unit: m[2] } : { name: text, unit: '' };
 }
 
-// PLS-ens navn på en plass, eller indeksen når den ikke har noe navn.
-function label(names, section, i) {
-  const got = (names && names[section]) || [];
-  return (i < got.length && got[i]) ? got[i] : section.slice(3) + '[' + i + ']';
+// 'ERROR-diode {led}' -> { text: 'ERROR-diode', fmt: 'led' }. Et {format}
+// helt til slutt i navnet sier hvordan verdien vises, for alle slags
+// plasser. Kjente formater: se formatWord, og {alarm} for bits.
+function splitFormat(text) {
+  const m = /^(.*\S)\s*\{([A-Za-z0-9_]+)\}$/.exec(text || '');
+  return m ? { text: m[1], fmt: m[2] } : { text: text || '', fmt: '' };
 }
 
-// { name, unit } for en plass. Bare et navn fra PLS-en deles opp:
+// PLS-ens navn på en plass, uten {format}, eller indeksen når den ikke har
+// noe navn.
+function label(names, section, i) {
+  const got = (names && names[section]) || [];
+  return (i < got.length && got[i]) ? splitFormat(got[i]).text : section.slice(3) + '[' + i + ']';
+}
+
+// { name, unit, fmt } for en plass. Bare et navn fra PLS-en deles opp:
 // reserveetiketten 'reals[3]' skal ikke leses som enheten '3'.
 function nameAndUnit(names, section, i) {
   const got = (names && names[section]) || [];
-  return (i < got.length && got[i]) ? splitUnit(section, got[i])
-                                    : { name: label(names, section, i), unit: '' };
+  if (!(i < got.length && got[i])) return { name: label(names, section, i), unit: '', fmt: '' };
+  const f = splitFormat(got[i]);
+  const u = splitUnit(section, f.text);
+  return { name: u.name, unit: u.unit, fmt: f.fmt };
+}
+
+// Svarene fra LED-instruksjonen (TcpLinkDiagLeds) og fault_id fra OB80.
+const LED_TEXT = { 0: 'finnes ikke', 1: 'av', 2: 'lyser', 3: 'lyser (farge 2)', 4: 'blinker',
+                   5: 'blinker (farge 2)', 6: 'blinker vekselvis', 9: 'ikke tilgjengelig' };
+const OB80_TEXT = { 0: 'ingen', 1: 'syklustid overskredet', 2: 'OB kalt mens den fortsatt kjørte' };
+
+function hex4(v) { return '16#' + v.toString(16).toUpperCase().padStart(4, '0'); }
+
+// Et word som tekst, etter formatet i navnet: {dec} som desimaltall, {led}
+// og {ob80} som tekst, ellers heksadesimalt. En ukjent kode vises med tallet.
+function formatWord(value, fmt) {
+  if (fmt === 'dec') return String(value);
+  if (fmt === 'led') return LED_TEXT[value] || (value >= 0x8000 ? 'LED-feil ' + hex4(value) : 'kode ' + value);
+  if (fmt === 'ob80') return OB80_TEXT[value] || 'tidsfeil ' + hex4(value);
+  return hex4(value);
 }
 
 
@@ -236,10 +263,9 @@ function historyLine(names, rec) {
   const when = t[0] + '-' + p(t[1]) + '-' + p(t[2]) + ' ' + p(t[3]) + ':' + p(t[4]) + ':' +
                p(t[5]) + '.' + p(t[6], 3);
   const isBit = rec.section === 0;
-  const name = label(names, isBit ? 'tx_bits' : 'tx_words', rec.index);
-  const value = isBit ? (rec.value ? 'på' : 'av')
-                      : '16#' + rec.value.toString(16).toUpperCase().padStart(4, '0');
-  return 'historikk #' + rec.recNo + ' ' + when + ' ' + name + ' = ' + value;
+  const n = nameAndUnit(names, isBit ? 'tx_bits' : 'tx_words', rec.index);
+  const value = isBit ? (rec.value ? 'på' : 'av') : formatWord(rec.value, n.fmt);
+  return 'historikk #' + rec.recNo + ' ' + when + ' ' + n.name + ' = ' + value;
 }
 
 
@@ -309,7 +335,7 @@ module.exports = {
   UP_MAGIC, UP_VER, UP_HDR, DN_MAGIC, DN_VER, DN_HDR, KIND_DATA, KIND_NAMES, KIND_HIST,
   HIST_REC, SECTIONS,
   sectionLen, readDTL, readBits, decodeUplink, walkNames, decodeHistory, encodeDownlink,
-  nextFrame, splitUnit, label, nameAndUnit, historyLine,
+  nextFrame, splitUnit, splitFormat, label, nameAndUnit, formatWord, historyLine,
 };
 
 if (require.main === module) main();

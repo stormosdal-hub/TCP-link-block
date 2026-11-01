@@ -9,9 +9,9 @@ BEGIN
    // siden av koden som fyller txDigital / txAnalog og leser rx, og endre
    // de to sammen.
    //
-   // Fylt ut med kjøreverk-tilordningen fra TCP_LINK.md avsnitt 9 som et
-   // eksempel. Plasser som ikke står her, forblir tomme og vises med
-   // indeksen sin.
+   // Fylt ut med kjøreverk-tilordningen fra TCP_LINK.md avsnitt 9 og
+   // CPU-diagnosen fra avsnitt 3.9 som et eksempel. Plasser som ikke står
+   // her, forblir tomme og vises med indeksen sin.
    //
    // Filen er lagret som UTF-8 med BOM, så TIA leser æ, ø og å riktig, både
    // i kommentarene og i navnene. Hvis et navn likevel kommer fram med rare
@@ -22,6 +22,19 @@ BEGIN
    txWords[0] := 'Feilkode';
    txWords[1] := 'Varselkode';
    txWords[2] := 'Statusord';
+
+   // ---- txDigital.words[8..15]: CPU-diagnose, TCP_LINK.md avsnitt 3.9 ----
+   // Merket i krøllparentes sier hvordan klienten viser verdien. Når et
+   // {led}- eller {ob80}-word endres, henter nettvisningen også
+   // diagnosebufferen fra PLS-ens web-server.
+   txWords[8]  := 'ERROR-diode {led}';
+   txWords[9]  := 'MAINT-diode {led}';
+   txWords[10] := 'OB82-kall {dec}';
+   txWords[11] := 'OB82 HW-ID {dec}';
+   txWords[12] := 'OB82 kanal {dec}';
+   txWords[13] := 'OB82 IO-status';
+   txWords[14] := 'OB80-kall {dec}';
+   txWords[15] := 'OB80 fault_id {ob80}';
 
    // ---- txDigital.times ----
    txTimes[0] := 'Sist kjørt';

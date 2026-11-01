@@ -37,6 +37,12 @@ SECTIONS = ("tx_bits", "tx_words", "tx_times", "tx_ints", "tx_dints", "tx_reals"
 # Bare tallplasser har en enhet i navnet, se split_unit.
 NUMERIC = {"tx_ints", "tx_dints", "tx_reals", "rx_ints", "rx_dints", "rx_reals"}
 UNIT_RE = re.compile(r"^(.*\S)\s*\[([^\[\]]+)\]$")
+FORMAT_RE = re.compile(r"^(.*\S)\s*\{([A-Za-z0-9_]+)\}$")
+
+# Svarene fra LED-instruksjonen (TcpLinkDiagLeds) og fault_id fra OB80.
+LED_TEXT = {0: "finnes ikke", 1: "av", 2: "lyser", 3: "lyser (farge 2)", 4: "blinker",
+            5: "blinker (farge 2)", 6: "blinker vekselvis", 9: "ikke tilgjengelig"}
+OB80_TEXT = {0: "ingen", 1: "syklustid overskredet", 2: "OB kalt mens den fortsatt kjørte"}
 
 
 # Layoutbyte, per retning, i samme rekkefølge som innholdet:
@@ -200,19 +206,43 @@ def split_unit(section, text):
     return (m.group(1), m.group(2)) if m else (text, "")
 
 
+def split_format(text):
+    """'ERROR-diode {led}' -> ('ERROR-diode', 'led').
+
+    Et {format} helt til slutt i navnet sier hvordan verdien vises, for
+    alle slags plasser. Kjente formater: se format_word, og {alarm} for bits.
+    """
+    m = FORMAT_RE.match(text or "")
+    return (m.group(1), m.group(2)) if m else (text or "", "")
+
+
 def label(names, section, i):
-    """PLS-ens navn på en plass, eller indeksen når den ikke har noe navn."""
+    """PLS-ens navn på en plass, uten {format}, eller indeksen når den ikke har noe navn."""
     got = names.get(section, [])
-    return got[i] if i < len(got) and got[i] else "%s[%d]" % (section[3:], i)
+    return split_format(got[i])[0] if i < len(got) and got[i] else "%s[%d]" % (section[3:], i)
 
 
 def name_and_unit(names, section, i):
-    """(navn, enhet) for en plass. Bare et navn fra PLS-en deles opp:
+    """(navn, enhet, format) for en plass. Bare et navn fra PLS-en deles opp:
     reserveetiketten 'reals[3]' skal ikke leses som enheten '3'."""
     got = names.get(section, [])
     if i < len(got) and got[i]:
-        return split_unit(section, got[i])
-    return label(names, section, i), ""
+        text, fmt = split_format(got[i])
+        name, unit = split_unit(section, text)
+        return name, unit, fmt
+    return label(names, section, i), "", ""
+
+
+def format_word(value, fmt):
+    """Et word som tekst, etter formatet i navnet: {dec} som desimaltall, {led}
+    og {ob80} som tekst, ellers heksadesimalt. En ukjent kode vises med tallet."""
+    if fmt == "dec":
+        return str(value)
+    if fmt == "led":
+        return LED_TEXT.get(value) or ("LED-feil 16#%04X" % value if value >= 0x8000 else "kode %d" % value)
+    if fmt == "ob80":
+        return OB80_TEXT.get(value) or "tidsfeil 16#%04X" % value
+    return "16#%04X" % value
 
 
 def history_line(names, rec):
@@ -220,8 +250,8 @@ def history_line(names, rec):
     y, mo, d, h, mi, s, ms = rec["ts"]
     when = "%d-%02d-%02d %02d:%02d:%02d.%03d" % (y, mo, d, h, mi, s, ms)
     is_bit = rec["section"] == 0
-    name = label(names, "tx_bits" if is_bit else "tx_words", rec["index"])
-    value = ("på" if rec["value"] else "av") if is_bit else "16#%04X" % rec["value"]
+    name, _unit, fmt = name_and_unit(names, "tx_bits" if is_bit else "tx_words", rec["index"])
+    value = ("på" if rec["value"] else "av") if is_bit else format_word(rec["value"], fmt)
     return "historikk #%d %s %s = %s" % (rec["rec_no"], when, name, value)
 
 
@@ -276,7 +306,7 @@ def main():
             on = [label(names, "tx_bits", i) for i, b in enumerate(s["bits"]) if b]
             reals = {}
             for i, r in enumerate(s["reals"][:4]):
-                name, unit = name_and_unit(names, "tx_reals", i)
+                name, unit, _fmt = name_and_unit(names, "tx_reals", i)
                 reals[name] = "%g%s" % (round(r, 3), " " + unit if unit else "")
             print(s["seq"], "på:", on, "ints:", s["ints"][:4], "reals:", reals)
 
